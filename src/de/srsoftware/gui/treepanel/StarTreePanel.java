@@ -159,7 +159,7 @@ public class StarTreePanel extends TreePanel {
 				}
 
 			}
-			moveNodeTowards(node, origin);
+			node.moveTowards(origin);
 		}
 	}
 

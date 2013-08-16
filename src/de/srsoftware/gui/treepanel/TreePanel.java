@@ -86,39 +86,6 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		addMouseListener(this);
 	}
 	
-	protected void moveNodeTowardsY(TreeNode dummy, int y) {
-		if (dummy !=null){
-			Point origin=dummy.getOrigin();
-			origin.y=(origin.y+y)/2;
-			dummy.setOrigin(origin);			
-		}
-	}
-	
-	public void moveNodeTowards(TreeNode node, Point target) {
-		moveNodeTowards(node, target.x, target.y);
-	}
-
-	public void moveNodeTowards(TreeNode node, int x, int y) {
-		if (node != null) {
-//			if (node == mindmap) {
-//				x = this.getWidth() / 2;
-//				y = this.getHeight() / 2;
-//			}
-			int dx = (x - node.getOrigin().x) / 4;
-			int dy = (y - node.getOrigin().y) / 4;
-			moveNode(node, dx, dy);
-		}
-	}
-	
-	public void moveNode(TreeNode node, int dx, int dy) {
-		if (dx != 0 || dy != 0) {
-			Point oldOrigin = node.getOrigin();
-			Point newOrigin = new Point(oldOrigin.x + dx, oldOrigin.y + dy);
-			node.setOrigin(newOrigin);
-			if (dx>5 || dy>5) pushThread();
-		}
-	}
-	
 	public Point center(){
 		return new Point(getWidth()/2,getHeight()/2);
 	}

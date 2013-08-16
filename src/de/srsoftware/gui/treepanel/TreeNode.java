@@ -978,4 +978,25 @@ public class TreeNode {
 			}
 		}
 	}
+
+	public int move(int dx, int dy) {
+		origin.x=origin.x+dx;
+		origin.y=origin.y+dy;
+		if (dx>dy) return dx;
+		return dy;
+	}
+
+	public void moveTowards(int x, int y) {
+		int dx = (x - origin.x) / 4;
+		int dy = (y - origin.y) / 4;
+		move(dx, dy);
+	}
+
+	public void moveTowards(Point target) {
+		moveTowards(target.x, target.y);
+	}
+
+	public void moveTowardsY(int y) {	
+		origin.y=(origin.y+y)/2;
+	}
 }

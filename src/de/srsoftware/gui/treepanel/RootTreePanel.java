@@ -53,7 +53,7 @@ public class RootTreePanel extends TreePanel {
 			TreeNode child;
 			Dimension d=mindmap.nodeDimension(g, this);
 			Point center=new Point((getWidth()-d.width)/3,getHeight()/2);
-			moveNodeTowards(mindmap, center);
+			mindmap.moveTowards(center);
 			if (wasFolded){
 				child=mindmap.firstChild();
 				while (child!=null) {
@@ -86,7 +86,7 @@ public class RootTreePanel extends TreePanel {
 			y+=(mindmapDimension.height)/2+dist;
 			while ((sibling=sibling.next())!=null){
 				Dimension siblingDim=sibling.nodeDimension(g, this);
-				moveNodeTowards(sibling, x, y);
+				sibling.moveTowards(x, y);
 				p=sibling.getOrigin();
 				p.y+=siblingDim.height/2;
 				points.add(p);
@@ -108,7 +108,7 @@ public class RootTreePanel extends TreePanel {
 				Dimension siblingDim=sibling.nodeDimension(g, this);
 				height+=siblingDim.height+dist;
 				y-=siblingDim.height+dist;
-				moveNodeTowards(sibling, x, y);
+				sibling.moveTowards(x, y);
 				p=sibling.getOrigin();
 				p.y+=siblingDim.height/2;
 				points.add(p);
@@ -127,7 +127,7 @@ public class RootTreePanel extends TreePanel {
 			Dimension parentDimension=parent.nodeDimension(g, this);
 			leftCenter.y=y+height/2+parentDimension.height;
 			leftCenter.x-=parentDimension.width+distance;
-			moveNodeTowards(parent, leftCenter);
+			parent.moveTowards(leftCenter);
 			p=parent.getOrigin();
 			p.x+=parentDimension.width;
 			p.y+=parentDimension.height/2;
@@ -185,7 +185,7 @@ public class RootTreePanel extends TreePanel {
 				Dimension d2=child.nodeDimension(g, this);
 				Point target=new Point(currentOrigin);
 				target.y+=(d.height-d2.height)/2;
-				moveNodeTowards(child, target);
+				child.moveTowards(target);
 				paint(g,child, true);
 				currentOrigin.y+=d.height+dist;
 				Point p=child.getOrigin();
