@@ -40,7 +40,7 @@ import de.srsoftware.tools.language.LanguagePack;
  * @author Stephan Richter
  * 
  */
-public class TreePanel extends JPanel implements MouseListener, MouseWheelListener {
+	public class TreePanel extends JPanel implements MouseListener, MouseWheelListener {
 	private static final long serialVersionUID = -9127677905556355410L;
 	private static final int UP = 1;
 	private static final int DOWN = -1;
@@ -54,7 +54,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	public TreeNode tree; // der Baum, das vom Panel dargestellt wird
 	protected Color connectionColor;
 	protected static TreeNode cuttedNode = null;
-	private TreeThread organizerThread; // Thread, der in regelmäßigen Abständen das Layout aktualisiert
+	protected TreeThread organizerThread; // Thread, der in regelmäßigen Abständen das Layout aktualisiert
 	protected static LanguagePack languagePack=null;
 	protected boolean updatedSinceLastChange = false;
 	protected int fileLoadLevelLimit = 2; // maximale Tiefe von aktuellem Knoten ausgehend, bei der verlinkte Bäume geladen werden
@@ -219,6 +219,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	protected void propagateCurrentFile() {
 		//System.out.println("propagateCurrentFile");
 		URL path = tree.getRoot().nodeFile();
+		
 		if (path != null) {
 			String title = path.toString();
 			if (tree.hasUnsavedChanges()) title += " (*)";
@@ -564,7 +565,6 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	public void mousePressed(MouseEvent arg0) {
 		// Bestimmen des geklcikten Knotens
 		TreeNode clickedNode = getNodeAt(arg0.getPoint());
-
 		// bei Doppelklick: Aktion auslösen
 		if (arg0.getClickCount() > 1) {
 			if (tree.getLink() != null)
@@ -592,7 +592,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		}
 	}
 
-	private TreeNode getNodeAt(Point point) {
+	protected TreeNode getNodeAt(Point point) {
 		// Start: Distanz von Click zu zentralem Knoten prüfen
 		if (tree == null) return null;
 		TreeNode clickedNode = tree;

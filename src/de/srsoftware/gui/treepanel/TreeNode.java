@@ -176,7 +176,6 @@ public class TreeNode {
 	}
 
 	public Dimension paint(Graphics g, ImageObserver obs, boolean draw) {
-		
 		if (formula != null) {
 			Dimension formulaDimension = formula.getSize(g);
 			if (formulaDimension.width < 10 && nodeImage != null) formulaDimension.width = 300;
@@ -597,9 +596,9 @@ public class TreeNode {
 	}
 
 	public TreeNode getRoot() {
-		TreeNode result = this;
+		TreeNode result = this;		
 		while (result.parent != null && result.nodeFile == null)
-			result = result.parent;
+			result = result.parent();
 		return result;
 	}
 
