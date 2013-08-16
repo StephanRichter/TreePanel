@@ -29,14 +29,14 @@ import de.srsoftware.tools.Tools;
 import de.srsoftware.tools.language.LanguagePack;
 import de.srsoftware.xmlformatter.XmlFormatter;
 
-public class MindmapNode {
-	private static TreeSet<MindmapNode> changedMindmaps = new TreeSet<MindmapNode>(new ObjectComparator());
-	private MindmapNode parent = null; // this variable holds the pointer to the parent node, if given
-	private MindmapNode firstChild = null;// this variable holds the pointer to the current node's first child
-	private MindmapNode lastChild = null;// this variable holds the pointer to the current node's last child
-	private MindmapNode nextBrother = null;// this variable holds the pointer to the current node's next brother, if given
-	private MindmapNode previousBrother = null;// this variable holds the pointer to the current node's previous brother, if given
-	private MindmapNode referencedNode = null;
+public class TreeNode {
+	private static TreeSet<TreeNode> changedMindmaps = new TreeSet<TreeNode>(new ObjectComparator());
+	private TreeNode parent = null; // this variable holds the pointer to the parent node, if given
+	private TreeNode firstChild = null;// this variable holds the pointer to the current node's first child
+	private TreeNode lastChild = null;// this variable holds the pointer to the current node's last child
+	private TreeNode nextBrother = null;// this variable holds the pointer to the current node's next brother, if given
+	private TreeNode previousBrother = null;// this variable holds the pointer to the current node's previous brother, if given
+	private TreeNode referencedNode = null;
 	@SuppressWarnings("unused")
 	private NodeId nodeId = null; // this holds the node's id
 	private boolean folded = true; // determines whether a node's children shall be shown
@@ -74,14 +74,14 @@ public class MindmapNode {
 	/**
 	 * create a new node with empty formula
 	 */
-	public MindmapNode() {
+	public TreeNode() {
 		initialize(null, null);
 	}
 
 	/**
 	 * create a new node with empty formula at position origin
 	 */
-	public MindmapNode(Point origin) {
+	public TreeNode(Point origin) {
 		initialize(null, origin);
 	}
 
@@ -90,7 +90,7 @@ public class MindmapNode {
 	 * 
 	 * @param text the text for the formula
 	 */
-	public MindmapNode(String text) {
+	public TreeNode(String text) {
 		initialize(text, null);
 	}
 
@@ -99,7 +99,7 @@ public class MindmapNode {
 	 * 
 	 * @param text the text for the formula
 	 */
-	public MindmapNode(String text,Point origin) {
+	public TreeNode(String text,Point origin) {
 		initialize(text, origin);
 	}
 
@@ -108,7 +108,7 @@ public class MindmapNode {
 	 * 
 	 * @param newChild the MindmapNode to be appended
 	 */
-	public void addChild(MindmapNode newChild) {
+	public void addChild(TreeNode newChild) {
 		
 		newChild.parent = this;
 		lastChild = newChild;
@@ -116,7 +116,7 @@ public class MindmapNode {
 			firstChild = newChild;
 			lastChild.previousBrother=null;
 		} else {
-			MindmapNode dummy = firstChild;
+			TreeNode dummy = firstChild;
 			while (dummy.nextBrother != null)	dummy = dummy.nextBrother;
 			dummy.nextBrother = newChild;
 			lastChild.previousBrother = dummy;
@@ -137,23 +137,23 @@ public class MindmapNode {
 		return numChildren;
 	}
 
-	public MindmapNode parent() {
+	public TreeNode parent() {
 		return parent;
 	}
 
-	public MindmapNode firstChild() {
+	public TreeNode firstChild() {
 		return firstChild;
 	}
 
-	public MindmapNode lastChild() {
+	public TreeNode lastChild() {
 		return lastChild;
 	}
 
-	public MindmapNode next() {
+	public TreeNode next() {
 		return nextBrother;
 	}
 
-	public MindmapNode prev() {
+	public TreeNode prev() {
 		return previousBrother;
 	}
 
@@ -238,7 +238,7 @@ public class MindmapNode {
 		if (l > 10) return "...";
 		String result = "{";
 		if (formula != null) result += formula;
-		MindmapNode dummy = firstChild();
+		TreeNode dummy = firstChild();
 		while (dummy != null) {
 			result += dummy.toString(l + 1);
 			dummy = dummy.next();
@@ -260,9 +260,9 @@ public class MindmapNode {
 	}
 
 	public void cutoff() {
-		MindmapNode parentOfNodeToIsolate = parent();
-		MindmapNode nextBrotherOfNodeToIsolate = next();
-		MindmapNode previousBrotherOfNodeToIsolate = prev();
+		TreeNode parentOfNodeToIsolate = parent();
+		TreeNode nextBrotherOfNodeToIsolate = next();
+		TreeNode previousBrotherOfNodeToIsolate = prev();
 		if (nextBrotherOfNodeToIsolate != null) nextBrotherOfNodeToIsolate.previousBrother = previousBrotherOfNodeToIsolate;
 		if (previousBrotherOfNodeToIsolate != null) previousBrotherOfNodeToIsolate.nextBrother = nextBrotherOfNodeToIsolate;
 		if (parentOfNodeToIsolate != null) {
@@ -327,7 +327,7 @@ public class MindmapNode {
 				
 				fileUrl=resolveSymLinks(fileUrl);
 				
-				MindmapNode n = nodeOpenAndChanged(fileUrl);
+				TreeNode n = nodeOpenAndChanged(fileUrl);
 				if (n != null) {
 					// TODO wenn ein Mindmap geöffnet wird, das schon offen, geändert und noch ncht gespeichert ist:
 					// dieses Mindmap in eine temporäre Datei schreiben, und diese öffnen
@@ -386,7 +386,7 @@ public class MindmapNode {
 		String url=fileUrl.toString();
 		if (url.startsWith("http://www.genome.jp/dbget-bin/www_bget?R") ||url.startsWith("http://www.genome.jp/dbget-bin/www_bget?rn:R")) loadKeggReaction(fileUrl);
 		if (url.startsWith("http://www.genome.jp/dbget-bin/www_bget?C") ||url.startsWith("http://www.genome.jp/dbget-bin/www_bget?cpd:C")) loadKeggSubstance(fileUrl);
-		MindmapNode child=new MindmapNode("\\=>  browse \\=> ");
+		TreeNode child=new TreeNode("\\=>  browse \\=> ");
 		child.link=fileUrl;
 		addChild(child);
 		nodeFile=fileUrl;
@@ -405,7 +405,7 @@ public class MindmapNode {
 		}
 		for (Iterator<String> it = files.keySet().iterator(); it.hasNext();){
 			String name=it.next();			
-			MindmapNode child=new MindmapNode(name);
+			TreeNode child=new TreeNode(name);
 			child.nodeFile=files.get(name).toURL();
 			this.addChild(child);
 		}
@@ -420,12 +420,12 @@ public class MindmapNode {
 		return (referencedNode != null);
 	}
 
-	public MindmapNode referencedNode() {
+	public TreeNode referencedNode() {
 		return referencedNode;
 	}
 
-	public static MindmapNode nodeOpenAndChanged(URL url) {
-		for (MindmapNode n : changedMindmaps) {
+	public static TreeNode nodeOpenAndChanged(URL url) {
+		for (TreeNode n : changedMindmaps) {
 			URL u = n.nodeFile();
 			if ((u != null) && (url.equals(u)) && n.nodeFileHasBeenLoaded) return n;
 		}
@@ -437,23 +437,23 @@ public class MindmapNode {
 		for (int i=0; i<lines.length; i++){
 			if (lines[i].contains("<nobr>Formula</nobr>")){
 				
-				addChild(new MindmapNode(formatFormula(Tools.removeHtml(lines[++i]))));
+				addChild(new TreeNode(formatFormula(Tools.removeHtml(lines[++i]))));
 			}
 			if (lines[i].contains("<nobr>Name</nobr>")) {
 				formula=new Formula("Substance:\\n "+Tools.removeHtml(lines[++i]).replaceAll(";$", ""));
-				MindmapNode otherNames = null;
+				TreeNode otherNames = null;
 				while (!lines[++i].contains("</div>")){
-					if (otherNames==null) addChild(otherNames=new MindmapNode("other names"));
-					otherNames.addChild(new MindmapNode(Tools.removeHtml(lines[i]).replaceAll(";$", "")));
+					if (otherNames==null) addChild(otherNames=new TreeNode("other names"));
+					otherNames.addChild(new TreeNode(Tools.removeHtml(lines[i]).replaceAll(";$", "")));
 				}
 			}
 			if (lines[i].contains("<nobr>Reaction</nobr>")) {
-				MindmapNode reactions=null;
+				TreeNode reactions=null;
 				while (!lines[++i].contains("</div>")){
-					if (reactions==null) addChild(reactions=new MindmapNode("Reactions"));
+					if (reactions==null) addChild(reactions=new TreeNode("Reactions"));
 					String[] ids=Tools.removeHtml(lines[i]).split(" ");
 					for (int k=0; k<ids.length; k++){
-						MindmapNode reaction = new MindmapNode(ids[k].trim());
+						TreeNode reaction = new TreeNode(ids[k].trim());
 						reaction.nodeFile=new URL("http://www.genome.jp/dbget-bin/www_bget?"+ids[k].trim());
 						reactions.addChild(reaction);
 					}
@@ -481,18 +481,18 @@ public class MindmapNode {
 
 	private void loadKeggEquation(String equation) {
 		String[] sides=equation.split("<=>");
-		MindmapNode substrates=new MindmapNode("Substrates");
+		TreeNode substrates=new TreeNode("Substrates");
 		addSubstances(substrates,sides[0]);
 		addChild(substrates);
-		MindmapNode products=new MindmapNode("Products");
+		TreeNode products=new TreeNode("Products");
 		addSubstances(products,sides[1]);
 		addChild(products);
 	}
 
-	private void addSubstances(MindmapNode substances, String list) {
+	private void addSubstances(TreeNode substances, String list) {
 		String[] parts = list.split(" \\+ ");
 		for (int i=0; i<parts.length; i++){
-			MindmapNode child = new MindmapNode(parts[i]);
+			TreeNode child = new TreeNode(parts[i]);
 			try{
 				child.nodeFile=new URL("http://www.genome.jp/dbget-bin/www_bget?"+parts[i].trim());
 			} catch (MalformedURLException e) {
@@ -514,19 +514,19 @@ public class MindmapNode {
 				System.out.println("Datei ist nicht verfügbar. Versuche es erneut in " + String.valueOf(waitTime) + " ms...");
 				if (waitTime > 16000) throw new IOException(fileUrl.toString() + " nicht bereit zum Lesen!");
 			}
-			MindmapNode root = this;
+			TreeNode root = this;
 			root.nodeFile = fileUrl;
-			MindmapNode node = root;
+			TreeNode node = root;
 			String line;
 			while (fileReader.ready()) {
 				line = fileReader.readLine();
 				if (line.equals("[Root]")) {}
 				if (line.equals("[Child]")) {
-					node.addChild(new MindmapNode(this.origin));
+					node.addChild(new TreeNode(this.origin));
 					node = node.firstChild();
 				}
 				if (line.equals("[Brother]")) {
-					node.parent().addChild(new MindmapNode(this.origin));
+					node.parent().addChild(new TreeNode(this.origin));
 					node = node.next();
 				}
 				if (line.equals("[UP]")) {
@@ -596,16 +596,16 @@ public class MindmapNode {
 		return nodeFile;
 	}
 
-	public MindmapNode getRoot() {
-		MindmapNode result = this;
+	public TreeNode getRoot() {
+		TreeNode result = this;
 		while (result.parent != null && result.nodeFile == null)
 			result = result.parent;
 		return result;
 	}
 
-	public MindmapNode getSuperRoot() {
+	public TreeNode getSuperRoot() {
 		// TODO Auto-generated method stub
-		MindmapNode result = this;
+		TreeNode result = this;
 		while (result.parent != null)
 			result = result.parent;
 		return result;
@@ -669,7 +669,7 @@ public class MindmapNode {
 			if (tag.equals("</node>")) return false;
 		}
 		while (file.ready()) {
-			MindmapNode dummy = new MindmapNode(this.origin);
+			TreeNode dummy = new TreeNode(this.origin);
 			dummy.parent = this;
 			if (!dummy.readMindmapFile(file)) return true;
 			this.addChild(dummy);
@@ -701,7 +701,7 @@ public class MindmapNode {
 				System.out.println("Datei ist nicht verfügbar. Versuche es erneut in " + String.valueOf(waitTime) + " ms...");
 				if (waitTime > 16000) throw new IOException(fileUrl.toString() + " nicht bereit zum Lesen!");
 			}
-			MindmapNode root = this;
+			TreeNode root = this;
 			root.nodeFile = fileUrl;
 			readMindmapFile(fileReader);
 
@@ -715,7 +715,7 @@ public class MindmapNode {
 	 * replaces teh oldNod by this node
 	 * @param oldNode
 	 */
-	public void replace(MindmapNode oldNode) {
+	public void replace(TreeNode oldNode) {
 		// TODO Auto-generated method stub
 		this.parent = oldNode.parent();
 		this.nextBrother = oldNode.next();
@@ -728,10 +728,10 @@ public class MindmapNode {
 		if (this.previousBrother != null) this.previousBrother.nextBrother = this;
 	}
 
-	public Vector<MindmapNode> linkedNodes() {
-		Vector<MindmapNode> result = new Vector<MindmapNode>();
+	public Vector<TreeNode> linkedNodes() {
+		Vector<TreeNode> result = new Vector<TreeNode>();
 		if (this.parent != null) result.add(this.parent);
-		MindmapNode dummy = this.firstChild;
+		TreeNode dummy = this.firstChild;
 		while (dummy != null) {
 			result.add(dummy);
 			dummy = dummy.nextBrother;
@@ -759,7 +759,7 @@ public class MindmapNode {
 	}
 
 	public void mindmapChanged() {
-		MindmapNode dummy = this;
+		TreeNode dummy = this;
 		while (dummy != null && dummy.nodeFile == null) { // sucht nach der Wurzel des aktuellen Teilbaums
 			if (dummy.parent() == null) changedMindmaps.add(dummy); // falls die Wurzel selbst noch nicht gespeichert wurde
 			dummy = dummy.parent;
@@ -847,17 +847,17 @@ public class MindmapNode {
 		if (!backgroundColor.equals(Color.WHITE)) file.write("Color2=" + Tools.colorToString(backgroundColor) + "\r\n");
 	}
 
-	private static MindmapNode pollFirst(TreeSet<MindmapNode> tree) {
-		MindmapNode result = tree.first();
+	private static TreeNode pollFirst(TreeSet<TreeNode> tree) {
+		TreeNode result = tree.first();
 		tree.remove(result);
 		return result;
 	}
 
-	public static TreeSet<MindmapNode> saveChangedMindmaps() {
+	public static TreeSet<TreeNode> saveChangedMindmaps() {
 		// TODO Auto-generated method stub
-		TreeSet<MindmapNode> result = new TreeSet<MindmapNode>(new ObjectComparator());
+		TreeSet<TreeNode> result = new TreeSet<TreeNode>(new ObjectComparator());
 		while (!changedMindmaps.isEmpty()) {
-			MindmapNode dummy = pollFirst(changedMindmaps);
+			TreeNode dummy = pollFirst(changedMindmaps);
 			if (!dummy.save()) result.add(dummy);
 			if (nodeOpenAndChanged(dummy.nodeFile) != null) {
 				System.out.println(languagePack.get("WARNING_CONCURRENT_CHANGES").replaceAll("##", dummy.nodeFile.toString()));
@@ -885,7 +885,7 @@ public class MindmapNode {
 		changedMindmaps.clear();
 	}
 
-	public void addBrother(MindmapNode brother) {
+	public void addBrother(TreeNode brother) {
 		if (brother==null) return;
 		if (parent==null) return;
 		
@@ -899,9 +899,9 @@ public class MindmapNode {
 		brother.mindmapChanged();
 	}
 
-	public MindmapNode clone() {
+	public TreeNode clone() {
 		try {
-			MindmapNode result = new MindmapNode(this.getFormulaCode(),this.getOrigin());
+			TreeNode result = new TreeNode(this.getFormulaCode(),this.getOrigin());
 			result.backgroundColor = new Color(backgroundColor.getRGB());
 			result.foregroundColor = new Color(foregroundColor.getRGB());
 			result.nodeImage = (nodeImage == null) ? null : nodeImage.clone(); // holds the node's image, if given
@@ -937,9 +937,9 @@ public class MindmapNode {
 		return this.nodeFileHasBeenLoaded;
 	}
 
-	public MindmapNode reload() throws FileNotFoundException, IOException, DataFormatException, URISyntaxException {
+	public TreeNode reload() throws FileNotFoundException, IOException, DataFormatException, URISyntaxException {
 		// TODO Auto-generated method stub
-		MindmapNode result = new MindmapNode();
+		TreeNode result = new TreeNode();
 		result.nodeFile = this.nodeFile;
 		result.loadFromFile();
 		return result;

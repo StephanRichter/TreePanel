@@ -17,7 +17,7 @@ public class StarTreePanel extends TreePanel {
 
 	public StarTreePanel() {
 		super();
-		MindmapNode.setCentered(true);
+		TreeNode.setCentered(true);
 	}
 
 	public StarTreePanel(TreePanel mindmapPanel) {
@@ -25,7 +25,7 @@ public class StarTreePanel extends TreePanel {
 		setParametersFrom(mindmapPanel);
 	}
 
-	private void paint(Graphics2D g, MindmapNode node, MindmapNode doNotTraceThis, int level) {
+	private void paint(Graphics2D g, TreeNode node, TreeNode doNotTraceThis, int level) {
 		if (node != null && level < levelLimit) {
 			Font oldFont = g.getFont();
 			float oldSize = oldFont.getSize();
@@ -39,7 +39,7 @@ public class StarTreePanel extends TreePanel {
 			/*
 			 * MindmapNode dummy = node.firstChild(); while (dummy != null) { if (dummy != doNotTraceThis) { Point org = dummy.getOrigin(); if (level < levelLimit - 1) g.drawLine(origin.x, origin.y, org.x, org.y); paint(g, dummy, node, level + 1); } dummy = dummy.next(); } dummy = node.parent(); if (dummy != null && dummy != doNotTraceThis) { Point org = dummy.getOrigin(); if (level < levelLimit - 1) g.drawLine(origin.x, origin.y, org.x, org.y); paint(g, dummy, node, level + 1); }
 			 */
-			MindmapNode dummy = node.lastChild();
+			TreeNode dummy = node.lastChild();
 			while (dummy!=null) {
 				if (dummy != doNotTraceThis) {
 					Point org = dummy.getOrigin();
@@ -93,7 +93,7 @@ public class StarTreePanel extends TreePanel {
 		return new Point(x, y);
 	}
 
-	private void organize(MindmapNode node, MindmapNode comingFrom, Point origin, int distance, double angle, int level) {
+	private void organize(TreeNode node, TreeNode comingFrom, Point origin, int distance, double angle, int level) {
 		if (level < fileLoadLevelLimit) {
 			if (node.nodeFile() != null) {
 				try {
@@ -121,7 +121,7 @@ public class StarTreePanel extends TreePanel {
 				}
 				angle += angleDiff;
 
-				MindmapNode child = node.firstChild();
+				TreeNode child = node.firstChild();
 				while (child != null) {
 					if (child != comingFrom) {
 						Point targetPos = getTargetPos(origin, angle, distance);
@@ -131,7 +131,7 @@ public class StarTreePanel extends TreePanel {
 					child = child.next();
 				}
 			} else { // comingFrom ist eines der Kinder
-				MindmapNode child = comingFrom.next();
+				TreeNode child = comingFrom.next();
 				angle += angleDiff;
 				while (child != null) {
 					if (child != comingFrom) {

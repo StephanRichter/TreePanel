@@ -51,9 +51,9 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	private float distanceRatio = 6.5f;
 	protected static float fontSize = 18f;
 	private TreeSet<String> exportedFiles = null;
-	public MindmapNode mindmap; // das Mindmap, das vom Panel dargestellt wird
+	public TreeNode mindmap; // das Mindmap, das vom Panel dargestellt wird
 	protected Color connectionColor;
-	protected static MindmapNode cuttedNode = null;
+	protected static TreeNode cuttedNode = null;
 	private TreeThread organizerThread; // Thread, der in regelmäßigen Abständen das Layout aktualisiert
 	protected static LanguagePack languagePack=null;
 	protected boolean updatedSinceLastChange = false;
@@ -86,7 +86,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		addMouseListener(this);
 	}
 	
-	protected void moveNodeTowardsY(MindmapNode dummy, int y) {
+	protected void moveNodeTowardsY(TreeNode dummy, int y) {
 		if (dummy !=null){
 			Point origin=dummy.getOrigin();
 			origin.y=(origin.y+y)/2;
@@ -94,11 +94,11 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		}
 	}
 	
-	public void moveNodeTowards(MindmapNode node, Point target) {
+	public void moveNodeTowards(TreeNode node, Point target) {
 		moveNodeTowards(node, target.x, target.y);
 	}
 
-	public void moveNodeTowards(MindmapNode node, int x, int y) {
+	public void moveNodeTowards(TreeNode node, int x, int y) {
 		if (node != null) {
 //			if (node == mindmap) {
 //				x = this.getWidth() / 2;
@@ -110,7 +110,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		}
 	}
 	
-	public void moveNode(MindmapNode node, int dx, int dy) {
+	public void moveNode(TreeNode node, int dx, int dy) {
 		if (dx != 0 || dy != 0) {
 			Point oldOrigin = node.getOrigin();
 			Point newOrigin = new Point(oldOrigin.x + dx, oldOrigin.y + dy);
@@ -161,7 +161,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		if (mindmap.next() != null)
 			setMindmapTo(mindmap.next());
 		else {			
-			MindmapNode dummy=mindmap.parent();
+			TreeNode dummy=mindmap.parent();
 			if (dummy!=null) {
 				setMindmapTo(dummy);
 			sheduleNavigation(DOWN);
@@ -203,7 +203,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		if (mindmap.prev() != null)
 			setMindmapTo(mindmap.prev());
 		else {
-			MindmapNode dummy=mindmap.parent();
+			TreeNode dummy=mindmap.parent();
 			if (dummy!=null) {
 				setMindmapTo(dummy);
 			sheduleNavigation(UP);
@@ -215,7 +215,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 
 	public void navigateToEnd() {
 		if (mindmap.firstChild() != null) {
-			MindmapNode dummy = mindmap.firstChild();
+			TreeNode dummy = mindmap.firstChild();
 			while (dummy.next() != null)
 				dummy = dummy.next();
 			setMindmapTo(dummy);
@@ -223,7 +223,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	}
 
 	public void deleteActive() {
-		MindmapNode dummy = mindmap.prev();
+		TreeNode dummy = mindmap.prev();
 		if (dummy == null) dummy = mindmap.next();
 		if (dummy == null) dummy = mindmap.parent();
 		if (dummy != null) {
@@ -233,7 +233,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		}
 	}
 
-	protected void setMindmapTo(MindmapNode newNode) {
+	protected void setMindmapTo(TreeNode newNode) {
 		//System.out.println("setMindmapTo("+newNode.getText()+")");
 		if (newNode == null) return; // falls kein Knoten zum zentrieren übergeben wurde: abbrechen
 		if (backgroundTraceColor != null) newNode.setBGColor(backgroundTraceColor); // falls die Hintergrundfarbe verschleppt wird: Hintergrundfarbe zum Ziel-Knoten übertragen
@@ -261,12 +261,12 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	}
 
 
-	public void setMindmap(MindmapNode root) {
+	public void setMindmap(TreeNode root) {
 		mindmap = root;
 		organizerThread.go();		
 	}
 
-	public void appendNewChild(MindmapNode newChild) {
+	public void appendNewChild(TreeNode newChild) {
 		if (newChild != null) {
 			mindmap.addChild(newChild);
 			mindmap.mindmapChanged();
@@ -274,7 +274,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		}
 	}
 
-	public void editMindmap(MindmapNode node) {
+	public void editMindmap(TreeNode node) {
 		String oldText = node.getFormulaCode();
 		String text=oldText;
 		if (text.endsWith(".imf")||text.endsWith("{.imf}"))	{
@@ -299,7 +299,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		requestFocus();
 	}
 
-	public void questForFileToSaveMindmap(MindmapNode node) {
+	public void questForFileToSaveMindmap(TreeNode node) {
 		String guessedName = Tools.deleteNonFilenameChars(node.getText() + ".imf");
 		String choosenFilename = Tools.saveDialog(this, languagePack.get("SAVE_AS"), guessedName, new GenericFileFilter(languagePack.get("MINDMAP_FILE"), "*.imf"));
 		if (choosenFilename == null)
@@ -325,25 +325,25 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		}
 	}
 
-	private MindmapNode pollFirst(TreeSet<MindmapNode> ts) {
-		MindmapNode result = ts.first();
+	private TreeNode pollFirst(TreeSet<TreeNode> ts) {
+		TreeNode result = ts.first();
 		ts.remove(result);
 		return result;
 	}
 
 	public void saveMindmaps() {
-		TreeSet<MindmapNode> unsavedMindmaps = MindmapNode.saveChangedMindmaps();
+		TreeSet<TreeNode> unsavedMindmaps = TreeNode.saveChangedMindmaps();
 		while (!unsavedMindmaps.isEmpty())
 			questForFileToSaveMindmap(pollFirst(unsavedMindmaps));
 		propagateCurrentFile();
 	}
 
 	public boolean hasUnsavedMindmap() {
-		return MindmapNode.existUnsavedMindmaps();
+		return TreeNode.existUnsavedMindmaps();
 	}
 
 	public void flushMindmapChanges() {
-		MindmapNode.flushUnsavedChanges();
+		TreeNode.flushUnsavedChanges();
 	}
 
 	public void saveCurrentFork() {
@@ -355,12 +355,12 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		if (nodeImage != null) mindmap.setNodeImage(nodeImage);
 	}
 
-	public void appendNewBrother(MindmapNode createNewNode) {
+	public void appendNewBrother(TreeNode createNewNode) {
 		mindmap.addBrother(createNewNode);
 		setMindmapTo(createNewNode);
 	}
 
-	public MindmapNode currentMindmap() {
+	public TreeNode currentMindmap() {
 		return mindmap;
 	}
 
@@ -381,7 +381,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		}
 	}
 
-	protected void copyToClipboard(MindmapNode node) {
+	protected void copyToClipboard(TreeNode node) {
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(new StringSelection(node.getText() + '\n'), null);
 	}
@@ -468,12 +468,12 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 
 	public void startHtmlExport(String folder, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) throws IOException, DataFormatException, URISyntaxException {
 		exportedFiles = new TreeSet<String>();
-		MindmapNode root = mindmap.getSuperRoot();
+		TreeNode root = mindmap.getSuperRoot();
 		writeHtmlFile(root, folder, 1, onlyCurrent, maxDepth, interactive, singleFile, noMultipleFollow);
 		this.setMindmap(root.reload());
 	}
 
-	public String writeHtmlFile(MindmapNode root, String folder, int depth, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) throws IOException {
+	public String writeHtmlFile(TreeNode root, String folder, int depth, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) throws IOException {
 		String filename = root.nodeFile().getFile();
 		filename = folder + filename.substring(filename.lastIndexOf("/") + 1) + ".html";
 		if ((maxDepth == 0 || depth < maxDepth) && !exportedFiles.contains(filename)) {
@@ -488,11 +488,11 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		return filename;
 	}
 
-	private void exportNodeToHtml(MindmapNode node, BufferedWriter htmlFile, String folder, int depth, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) throws IOException {
+	private void exportNodeToHtml(TreeNode node, BufferedWriter htmlFile, String folder, int depth, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) throws IOException {
 		htmlFile.write(node.getText());
 		if (node.firstChild() != null) {
 			htmlFile.write("<ul>\n");
-			MindmapNode child = node.firstChild();
+			TreeNode child = node.firstChild();
 			while (child != null) {
 				htmlFile.write("<li>");
 				if (child.nodeFile() == null) {
@@ -596,7 +596,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 
 	public void mousePressed(MouseEvent arg0) {
 		// Bestimmen des geklcikten Knotens
-		MindmapNode clickedNode = getNodeAt(arg0.getPoint());
+		TreeNode clickedNode = getNodeAt(arg0.getPoint());
 
 		// bei Doppelklick: Aktion auslösen
 		if (arg0.getClickCount() > 1) {
@@ -625,14 +625,14 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		}
 	}
 
-	private MindmapNode getNodeAt(Point point) {
+	private TreeNode getNodeAt(Point point) {
 		// Start: Distanz von Click zu zentralem Knoten prüfen
 		if (mindmap == null) return null;
-		MindmapNode clickedNode = mindmap;
+		TreeNode clickedNode = mindmap;
 		double minDistance = point.distance(mindmap.getOrigin());
 
 		// Dann alle direkten Kinder des Zentralen Knotens prüfen
-		MindmapNode dummy = mindmap.firstChild();
+		TreeNode dummy = mindmap.firstChild();
 		while (dummy != null) {
 			double distance = point.distance(dummy.getOrigin());
 			if (distance < minDistance) {
@@ -641,7 +641,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 			}
 
 			// alle Enkel des zentralen Knotens prüfen
-			MindmapNode dummy2 = dummy.firstChild();
+			TreeNode dummy2 = dummy.firstChild();
 			while (dummy2 != null) {
 				distance = point.distance(dummy2.getOrigin());
 				if (distance < minDistance) {
@@ -668,7 +668,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 			}
 
 			// Kinder des Elter prüfen
-			MindmapNode dummy2 = dummy.firstChild();
+			TreeNode dummy2 = dummy.firstChild();
 			while (dummy2 != null) {
 				double distance = point.distance(dummy2.getOrigin());
 				if (distance < minDistance) {

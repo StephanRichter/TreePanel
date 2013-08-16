@@ -23,7 +23,7 @@ public class RootTreePanel extends TreePanel {
 	
 	public RootTreePanel() {
 		super();
-		MindmapNode.setCentered(false);
+		TreeNode.setCentered(false);
 	}
 	
 	public RootTreePanel(TreePanel mindmapPanel) {
@@ -50,7 +50,7 @@ public class RootTreePanel extends TreePanel {
 					e.printStackTrace();
 				}
 			}
-			MindmapNode child;
+			TreeNode child;
 			Dimension d=mindmap.nodeDimension(g, this);
 			Point center=new Point((getWidth()-d.width)/3,getHeight()/2);
 			moveNodeTowards(mindmap, center);
@@ -69,8 +69,8 @@ public class RootTreePanel extends TreePanel {
 		}
 	}
 
-	private void paintFamily(Graphics2D g, MindmapNode mindmap,Point leftCenter, Dimension mindmapDimension) {
-		MindmapNode parent=mindmap.parent();
+	private void paintFamily(Graphics2D g, TreeNode mindmap,Point leftCenter, Dimension mindmapDimension) {
+		TreeNode parent=mindmap.parent();
 		TreeSet<Point> points=new TreeSet<Point>(ObjectComparator.get());
 		if (parent!=null){
 			int x=leftCenter.x;
@@ -81,7 +81,7 @@ public class RootTreePanel extends TreePanel {
 			p.y+=mindmapDim.height/2;
 			points.add(p);
 			
-			MindmapNode sibling=mindmap;
+			TreeNode sibling=mindmap;
 			int height=mindmapDimension.height;
 			y+=(mindmapDimension.height)/2+dist;
 			while ((sibling=sibling.next())!=null){
@@ -137,7 +137,7 @@ public class RootTreePanel extends TreePanel {
 		}
 	}
 
-	private Dimension paint(Graphics2D g, MindmapNode mindmap, boolean draw) {
+	private Dimension paint(Graphics2D g, TreeNode mindmap, boolean draw) {
 		if (!this.contains(mindmap.getOrigin())){
 			mindmap.setFolded(true);
 			return new Dimension(0,0);
@@ -164,10 +164,10 @@ public class RootTreePanel extends TreePanel {
 		return result;
 	}
 
-	private Dimension paintChildren(Graphics2D g, Point leftCenter, MindmapNode mindmap, boolean draw) {
+	private Dimension paintChildren(Graphics2D g, Point leftCenter, TreeNode mindmap, boolean draw) {
 		int width = 0;
 		int height = dist;
-		MindmapNode child = mindmap.firstChild();
+		TreeNode child = mindmap.firstChild();
 		while (child != null) {
 			Dimension d = paint(g,child, false);
 			height += d.height+dist;
