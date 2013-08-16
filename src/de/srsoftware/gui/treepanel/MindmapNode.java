@@ -26,6 +26,7 @@ import de.srsoftware.tools.FileRecoder;
 import de.srsoftware.tools.Filefilter;
 import de.srsoftware.tools.ObjectComparator;
 import de.srsoftware.tools.Tools;
+import de.srsoftware.tools.language.LanguagePack;
 import de.srsoftware.xmlformatter.XmlFormatter;
 
 public class MindmapNode {
@@ -52,7 +53,7 @@ public class MindmapNode {
 	private static Color swappedColor = Color.white;
 	private boolean shrinkLargeImages = true;
 	private int maxBackupNumber = 10;
-	/* private static MindmapLanguagePack languagePack=new MindmapLanguagePack_English(); / */private static MindmapLanguagePack languagePack = new MindmapLanguagePack_German();
+	 /*private static LanguagePack languagePack=new English_TreePanel(); /*/private static LanguagePack languagePack = new German_Treepanel();
 
 	// */
 
@@ -859,7 +860,7 @@ public class MindmapNode {
 			MindmapNode dummy = pollFirst(changedMindmaps);
 			if (!dummy.save()) result.add(dummy);
 			if (nodeOpenAndChanged(dummy.nodeFile) != null) {
-				System.out.println(languagePack.WARNING_CONCURRENT_CHANGES().replaceAll("##", dummy.nodeFile.toString()));
+				System.out.println(languagePack.get("WARNING_CONCURRENT_CHANGES").replaceAll("##", dummy.nodeFile.toString()));
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {

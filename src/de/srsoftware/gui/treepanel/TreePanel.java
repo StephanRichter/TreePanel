@@ -34,6 +34,7 @@ import javax.swing.JPanel;
 import de.srsoftware.formula.FormulaInputDialog;
 import de.srsoftware.tools.GenericFileFilter;
 import de.srsoftware.tools.Tools;
+import de.srsoftware.tools.language.LanguagePack;
 
 /**
  * @author Stephan Richter
@@ -54,7 +55,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	protected Color connectionColor;
 	protected static MindmapNode cuttedNode = null;
 	private TreeThread organizerThread; // Thread, der in regelmäßigen Abständen das Layout aktualisiert
-	protected static MindmapLanguagePack languagePack=null;
+	protected static LanguagePack languagePack=null;
 	protected boolean updatedSinceLastChange = false;
 	protected int fileLoadLevelLimit = 2; // maximale Tiefe von aktuellem Knoten ausgehend, bei der verlinkte Mindmaps geladen werden
 	private Image backgroundImage;
@@ -128,8 +129,8 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 
 	private void init() {
 		if (Tools.language.equals("English")){
-			languagePack=new MindmapLanguagePack_English(); // auch verwendet in StarTreePanel und MindmapNode; FormulaInputDialog verwendet FormulaLanguagePack 
-		} else languagePack = new MindmapLanguagePack_German(); // auch verwendet in StarTreePanel und MindmapNode; FormulaInputDialog verwendet FormulaLanguagePack
+			languagePack=new English_TreePanel(); // auch verwendet in StarTreePanel und MindmapNode; FormulaInputDialog verwendet FormulaLanguagePack 
+		} else languagePack = new German_Treepanel(); // auch verwendet in StarTreePanel und MindmapNode; FormulaInputDialog verwendet FormulaLanguagePack
 		actionListeners = new Vector<ActionListener>();
 		this.setBackground(new Color(0, 155, 255));
 		addMouseWheelListener(this);
@@ -281,7 +282,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 			text=text.substring(text.lastIndexOf('/')+1);
 			text=text.substring(0,text.lastIndexOf('.'));
 		}
-		String newText = FormulaInputDialog.readInput(null, languagePack.CHANGE_CURRENT_NODES_TEXT(), text);
+		String newText = FormulaInputDialog.readInput(null, languagePack.get("CHANGE_CURRENT_NODES_TEXT"), text);
 		if ((newText != null) && !newText.equals(oldText)) node.setText(newText);
 		updateView();
 	}
@@ -300,19 +301,19 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 
 	public void questForFileToSaveMindmap(MindmapNode node) {
 		String guessedName = Tools.deleteNonFilenameChars(node.getText() + ".imf");
-		String choosenFilename = Tools.saveDialog(this, languagePack.SAVE_AS(), guessedName, new GenericFileFilter(languagePack.MINDMAP_FILE(), "*.imf"));
+		String choosenFilename = Tools.saveDialog(this, languagePack.get("SAVE_AS"), guessedName, new GenericFileFilter(languagePack.get("MINDMAP_FILE"), "*.imf"));
 		if (choosenFilename == null)
 			node.mindmapChanged();
 		else {
 			if (!choosenFilename.toUpperCase().endsWith(".IMF") && !choosenFilename.toUpperCase().endsWith(".MM")) {
 				choosenFilename += ".imf";
 			}
-			if (!(new File(choosenFilename)).exists() || JOptionPane.showConfirmDialog(null, languagePack.ASK_FOR_OVERWRITE(), languagePack.WARNING(), JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+			if (!(new File(choosenFilename)).exists() || JOptionPane.showConfirmDialog(null, languagePack.get("ASK_FOR_OVERWRITE"), languagePack.get("WARNING"), JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 				try {
 					URL u = new URL("file://" + choosenFilename);
 					System.out.println(u);
 					if (!node.saveTo(u))
-						JOptionPane.showMessageDialog(null, languagePack.SAVE_FAILED().replace("##", choosenFilename), languagePack.SAVE_ERROR(), JOptionPane.OK_OPTION);
+						JOptionPane.showMessageDialog(null, languagePack.get("SAVE_FAILED").replace("##", choosenFilename), languagePack.get("SAVE_ERROR"), JOptionPane.OK_OPTION);
 					else {
 						sendActionEvent(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "SetTitle:" + node.getRoot().nodeFile()));
 					}
