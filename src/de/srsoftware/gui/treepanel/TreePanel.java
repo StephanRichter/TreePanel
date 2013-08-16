@@ -47,17 +47,17 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	protected static Color backgroundTraceColor = null;
 	protected static Color foregroundTraceColor = null;
 	private Vector<ActionListener> actionListeners;
-	protected int distance = 100; // Basis-Distanz zwischen den Knoten des Mindmap
+	protected int distance = 100; // Basis-Distanz zwischen den Knoten des Baumes
 	private float distanceRatio = 6.5f;
 	protected static float fontSize = 18f;
 	private TreeSet<String> exportedFiles = null;
-	public TreeNode mindmap; // das Mindmap, das vom Panel dargestellt wird
+	public TreeNode tree; // der Baum, das vom Panel dargestellt wird
 	protected Color connectionColor;
 	protected static TreeNode cuttedNode = null;
 	private TreeThread organizerThread; // Thread, der in regelmäßigen Abständen das Layout aktualisiert
 	protected static LanguagePack languagePack=null;
 	protected boolean updatedSinceLastChange = false;
-	protected int fileLoadLevelLimit = 2; // maximale Tiefe von aktuellem Knoten ausgehend, bei der verlinkte Mindmaps geladen werden
+	protected int fileLoadLevelLimit = 2; // maximale Tiefe von aktuellem Knoten ausgehend, bei der verlinkte Bäume geladen werden
 	private Image backgroundImage;
 
 
@@ -100,7 +100,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 
 	public void moveNodeTowards(TreeNode node, int x, int y) {
 		if (node != null) {
-//			if (node == mindmap) {
+//			if (node == tree) {
 //				x = this.getWidth() / 2;
 //				y = this.getHeight() / 2;
 //			}
@@ -129,8 +129,8 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 
 	private void init() {
 		if (Tools.language.equals("English")){
-			languagePack=new English_TreePanel(); // auch verwendet in StarTreePanel und MindmapNode; FormulaInputDialog verwendet FormulaLanguagePack 
-		} else languagePack = new German_Treepanel(); // auch verwendet in StarTreePanel und MindmapNode; FormulaInputDialog verwendet FormulaLanguagePack
+			languagePack=new English_TreePanel();  
+		} else languagePack = new German_Treepanel();
 		actionListeners = new Vector<ActionListener>();
 		this.setBackground(new Color(0, 155, 255));
 		addMouseWheelListener(this);
@@ -140,7 +140,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	
   public void paint(Graphics g){
     super.paint(g);
-    if (mindmap==null && backgroundImage!=null) g.drawImage(backgroundImage,(this.getWidth()-backgroundImage.getWidth(this))/2,(this.getHeight()-backgroundImage.getHeight(this))/2,this);
+    if (tree==null && backgroundImage!=null) g.drawImage(backgroundImage,(this.getWidth()-backgroundImage.getWidth(this))/2,(this.getHeight()-backgroundImage.getHeight(this))/2,this);
   }
 
 	public void addActionListener(ActionListener actionListener) {
@@ -148,22 +148,22 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	}
 
 	public void navigateLeft() {
-		if (mindmap.parent() != null) setMindmapTo(mindmap.parent());
+		if (tree.parent() != null) setTreeTo(tree.parent());
 	}
 
 	public void navigateRight() {
 		//System.out.println("navigateRight");
-		if (mindmap.getLink() != null) Tools.execute(mindmap.getLink());
-		if (mindmap.firstChild() != null) setMindmapTo(mindmap.firstChild());
+		if (tree.getLink() != null) Tools.execute(tree.getLink());
+		if (tree.firstChild() != null) setTreeTo(tree.firstChild());
 	}
 
 	public void navigateDown() {
-		if (mindmap.next() != null)
-			setMindmapTo(mindmap.next());
+		if (tree.next() != null)
+			setTreeTo(tree.next());
 		else {			
-			TreeNode dummy=mindmap.parent();
+			TreeNode dummy=tree.parent();
 			if (dummy!=null) {
-				setMindmapTo(dummy);
+				setTreeTo(dummy);
 			sheduleNavigation(DOWN);
 		}
 	}
@@ -200,12 +200,12 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	}
 
 	public void navigateUp() {
-		if (mindmap.prev() != null)
-			setMindmapTo(mindmap.prev());
+		if (tree.prev() != null)
+			setTreeTo(tree.prev());
 		else {
-			TreeNode dummy=mindmap.parent();
+			TreeNode dummy=tree.parent();
 			if (dummy!=null) {
-				setMindmapTo(dummy);
+				setTreeTo(dummy);
 			sheduleNavigation(UP);
 			}
 			
@@ -214,32 +214,32 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	}
 
 	public void navigateToEnd() {
-		if (mindmap.firstChild() != null) {
-			TreeNode dummy = mindmap.firstChild();
+		if (tree.firstChild() != null) {
+			TreeNode dummy = tree.firstChild();
 			while (dummy.next() != null)
 				dummy = dummy.next();
-			setMindmapTo(dummy);
+			setTreeTo(dummy);
 		}
 	}
 
 	public void deleteActive() {
-		TreeNode dummy = mindmap.prev();
-		if (dummy == null) dummy = mindmap.next();
-		if (dummy == null) dummy = mindmap.parent();
+		TreeNode dummy = tree.prev();
+		if (dummy == null) dummy = tree.next();
+		if (dummy == null) dummy = tree.parent();
 		if (dummy != null) {
-			mindmap.cutoff();
-			mindmap.parent().mindmapChanged();
-			setMindmapTo(dummy);
+			tree.cutoff();
+			tree.parent().treeChanged();
+			setTreeTo(dummy);
 		}
 	}
 
-	protected void setMindmapTo(TreeNode newNode) {
-		//System.out.println("setMindmapTo("+newNode.getText()+")");
+	protected void setTreeTo(TreeNode newNode) {
+		//System.out.println("setTreeTo("+newNode.getText()+")");
 		if (newNode == null) return; // falls kein Knoten zum zentrieren übergeben wurde: abbrechen
 		if (backgroundTraceColor != null) newNode.setBGColor(backgroundTraceColor); // falls die Hintergrundfarbe verschleppt wird: Hintergrundfarbe zum Ziel-Knoten übertragen
 		if (foregroundTraceColor != null) newNode.setForeColor(foregroundTraceColor); // falls die Vordergrundfarbe verschleppt wird: Vordergrundfarbe zum Ziel-Knoten übertragen
-		mindmap.shrinkImages();// falls Bild des alten Zentrums groß war: verkleinern
-		mindmap = newNode; // neuen Knoten zentrieren
+		tree.shrinkImages();// falls Bild des alten Zentrums groß war: verkleinern
+		tree = newNode; // neuen Knoten zentrieren
 		propagateCurrentFile(); // die frohe Nachricht vom neuen Knoten verbreiten
 		updateView(); // Ansicht aktualisieren
 	}
@@ -251,30 +251,30 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 
 	protected void propagateCurrentFile() {
 		//System.out.println("propagateCurrentFile");
-		URL path = mindmap.getRoot().nodeFile();
+		URL path = tree.getRoot().nodeFile();
 		if (path != null) {
 			String title = path.toString();
-			if (mindmap.hasUnsavedChanges()) title += " (*)";
+			if (tree.hasUnsavedChanges()) title += " (*)";
 			//System.out.println("set title to "+title);
 			sendActionEvent(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "SetTitle:" + title));
 		}
 	}
 
 
-	public void setMindmap(TreeNode root) {
-		mindmap = root;
+	public void setTree(TreeNode root) {
+		tree = root;
 		organizerThread.go();		
 	}
 
 	public void appendNewChild(TreeNode newChild) {
 		if (newChild != null) {
-			mindmap.addChild(newChild);
-			mindmap.mindmapChanged();
+			tree.addChild(newChild);
+			tree.treeChanged();
 			updateView();
 		}
 	}
 
-	public void editMindmap(TreeNode node) {
+	public void editTree(TreeNode node) {
 		String oldText = node.getFormulaCode();
 		String text=oldText;
 		if (text.endsWith(".imf")||text.endsWith("{.imf}"))	{
@@ -287,23 +287,23 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		updateView();
 	}
 
-	protected void showMindmapImage() {
-		if (mindmap.getNodeImage() != null) {
-			mindmap.changeImageShrinkOption();
+	protected void showNodeImage() {
+		if (tree.getNodeImage() != null) {
+			tree.changeImageShrinkOption();
 			updateView();
 		}
 	}
 
-	public void editMindmap() {
-		editMindmap(mindmap);
+	public void editNode() {
+		editTree(tree);
 		requestFocus();
 	}
 
-	public void questForFileToSaveMindmap(TreeNode node) {
+	public void questForFileToSaveTree(TreeNode node) {
 		String guessedName = Tools.deleteNonFilenameChars(node.getText() + ".imf");
-		String choosenFilename = Tools.saveDialog(this, languagePack.get("SAVE_AS"), guessedName, new GenericFileFilter(languagePack.get("MINDMAP_FILE"), "*.imf"));
+		String choosenFilename = Tools.saveDialog(this, languagePack.get("SAVE_AS"), guessedName, new GenericFileFilter(languagePack.get("TREE_FILE"), "*.imf"));
 		if (choosenFilename == null)
-			node.mindmapChanged();
+			node.treeChanged();
 		else {
 			if (!choosenFilename.toUpperCase().endsWith(".IMF") && !choosenFilename.toUpperCase().endsWith(".MM")) {
 				choosenFilename += ".imf";
@@ -319,7 +319,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 					}
 				} catch (MalformedURLException e) {
 					System.out.println("Konnte keine URL aus \"" + choosenFilename + "\" basteln!");
-					node.mindmapChanged();
+					node.treeChanged();
 				}
 			}
 		}
@@ -331,51 +331,51 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		return result;
 	}
 
-	public void saveMindmaps() {
-		TreeSet<TreeNode> unsavedMindmaps = TreeNode.saveChangedMindmaps();
-		while (!unsavedMindmaps.isEmpty())
-			questForFileToSaveMindmap(pollFirst(unsavedMindmaps));
+	public void saveNodes() {
+		TreeSet<TreeNode> unsavedNodes = TreeNode.saveChangedNodes();
+		while (!unsavedNodes.isEmpty())
+			questForFileToSaveTree(pollFirst(unsavedNodes));
 		propagateCurrentFile();
 	}
 
-	public boolean hasUnsavedMindmap() {
-		return TreeNode.existUnsavedMindmaps();
+	public boolean hasUnsavedNodes() {
+		return TreeNode.existUnsavedNodes();
 	}
 
-	public void flushMindmapChanges() {
+	public void flushTreeChanges() {
 		TreeNode.flushUnsavedChanges();
 	}
 
 	public void saveCurrentFork() {
-		questForFileToSaveMindmap(mindmap);
-		if (mindmap.parent() != null) mindmap.parent().mindmapChanged();
+		questForFileToSaveTree(tree);
+		if (tree.parent() != null) tree.parent().treeChanged();
 	}
 
 	public void setImageOfCurrentNode(NodeImage nodeImage) {
-		if (nodeImage != null) mindmap.setNodeImage(nodeImage);
+		if (nodeImage != null) tree.setNodeImage(nodeImage);
 	}
 
 	public void appendNewBrother(TreeNode createNewNode) {
-		mindmap.addBrother(createNewNode);
-		setMindmapTo(createNewNode);
+		tree.addBrother(createNewNode);
+		setTreeTo(createNewNode);
 	}
 
-	public TreeNode currentMindmap() {
-		return mindmap;
+	public TreeNode currentNode() {
+		return tree;
 	}
 
 	public void cut() {
-		if (mindmap.parent() != null) {
-			cuttedNode = mindmap;
-			mindmap.cutoff();
-			mindmap.parent().mindmapChanged();
-			if (mindmap.prev() != null) {
-				setMindmapTo(mindmap.prev());
+		if (tree.parent() != null) {
+			cuttedNode = tree;
+			tree.cutoff();
+			tree.parent().treeChanged();
+			if (tree.prev() != null) {
+				setTreeTo(tree.prev());
 			} else {
-				if (mindmap.next() != null) {
-					setMindmapTo(mindmap.next());
+				if (tree.next() != null) {
+					setTreeTo(tree.next());
 				} else {
-					setMindmapTo(mindmap.parent());
+					setTreeTo(tree.parent());
 				}
 			}
 		}
@@ -387,40 +387,40 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	}
 
 	private void copyToClipboard() {
-		copyToClipboard(mindmap);
+		copyToClipboard(tree);
 	}
 
 	public void copy() {
-		cuttedNode = mindmap.clone();
+		cuttedNode = tree.clone();
 		copyToClipboard();
 	}
 
 	public void paste() {
-		if (mindmap.parent() != null && cuttedNode != null) {
+		if (tree.parent() != null && cuttedNode != null) {
 			appendNewBrother(cuttedNode);
 			cuttedNode = cuttedNode.clone();
 		}
 	}
 
 	public void setCurrentBackgroundColor(Color c) {
-		if (c != null) mindmap.setBGColor(c);
+		if (c != null) tree.setBGColor(c);
 	}
 
 	public void showNodeDetails() {
-		JOptionPane.showMessageDialog(this, mindmap.getFullInfo(), "Information", JOptionPane.INFORMATION_MESSAGE);
+		JOptionPane.showMessageDialog(this, tree.getFullInfo(), "Information", JOptionPane.INFORMATION_MESSAGE);
 		this.requestFocus();
 	}
 
 	public void refreshView() {
-		if (mindmap.getNodeImage() != null) {
-			mindmap.getNodeImage().reload();
+		if (tree.getNodeImage() != null) {
+			tree.getNodeImage().reload();
 			updateView();
 		}
 	}
 
 	public boolean traceBGColor() {
 		if (backgroundTraceColor == null) {
-			backgroundTraceColor = mindmap.getBGColor();
+			backgroundTraceColor = tree.getBGColor();
 			return true;
 		}
 		backgroundTraceColor = null;
@@ -429,7 +429,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 
 	public boolean traceForeColor() {
 		if (foregroundTraceColor == null) {
-			foregroundTraceColor = mindmap.getForeColor();
+			foregroundTraceColor = tree.getForeColor();
 			return true;
 		}
 		foregroundTraceColor = null;
@@ -437,15 +437,15 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	}
 
 	public void deleteActiveImage() {
-		mindmap.setImage(null);
+		tree.setImage(null);
 	}
 
 	public void navigateToRoot() {
-		while (mindmap.parent() != null) setMindmapTo(mindmap.parent());
+		while (tree.parent() != null) setTreeTo(tree.parent());
 	}
 
 	public void setCurrentForegroundColor(Color c) {
-		if (c != null) mindmap.setForeColor(c);
+		if (c != null) tree.setForeColor(c);
 	}
 
 	public void setTextSmaller() {
@@ -468,9 +468,9 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 
 	public void startHtmlExport(String folder, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) throws IOException, DataFormatException, URISyntaxException {
 		exportedFiles = new TreeSet<String>();
-		TreeNode root = mindmap.getSuperRoot();
+		TreeNode root = tree.getSuperRoot();
 		writeHtmlFile(root, folder, 1, onlyCurrent, maxDepth, interactive, singleFile, noMultipleFollow);
-		this.setMindmap(root.reload());
+		this.setTree(root.reload());
 	}
 
 	public String writeHtmlFile(TreeNode root, String folder, int depth, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) throws IOException {
@@ -537,7 +537,7 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 
 	private void writeHtmlHeader(BufferedWriter htmlFile) throws IOException {
 		htmlFile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-		htmlFile.write("<html>\n<head>\n<title>" + mindmap.getText() + "</title>\n</head>\n");
+		htmlFile.write("<html>\n<head>\n<title>" + tree.getText() + "</title>\n</head>\n");
 	}
 
 	private void closeHtmlFile(BufferedWriter htmlFile) throws IOException {
@@ -546,15 +546,15 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 	}
 
 	public void saveRoot() {
-		questForFileToSaveMindmap(mindmap.getSuperRoot());
+		questForFileToSaveTree(tree.getSuperRoot());
 	}
 
 	public void setLinkOfCurrentNode(URL link) {
-		mindmap.setLink(link);
+		tree.setLink(link);
 	}
 
 	public void deleteActiveLink() {
-		mindmap.setLink(null);
+		tree.setLink(null);
 	}
 	
 	public void setBackground(Color bg){
@@ -600,25 +600,25 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 
 		// bei Doppelklick: Aktion auslösen
 		if (arg0.getClickCount() > 1) {
-			if (mindmap.getLink() != null)
+			if (tree.getLink() != null)
 				// Ausführen, falls Verknüpfung
-				Tools.execute(mindmap.getLink());
+				Tools.execute(tree.getLink());
 			else
 				// Bearbeiten, falls normaler Knoten
-				editMindmap(clickedNode);
+				editTree(clickedNode);
 		} else {
 			if (arg0.getButton() == MouseEvent.BUTTON2) {
 				// Knoten-Text in Zwischenablage kopieren
 				copyToClipboard(clickedNode);
 			} else {
 				// zu Knoten wechseln oder Bild vergrößern
-				if (mindmap != null) {
-					if (mindmap == clickedNode)
+				if (tree != null) {
+					if (tree == clickedNode)
 						// wenn geklickter Knoten schon im Zentrum ist: Bild ggf. vergrößern
-						showMindmapImage();
+						showNodeImage();
 					else {
 						// wenn geklickter Knoten in der Peripherie: zentrieren
-						setMindmapTo(clickedNode);
+						setTreeTo(clickedNode);
 					}
 				}
 			}
@@ -627,12 +627,12 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 
 	private TreeNode getNodeAt(Point point) {
 		// Start: Distanz von Click zu zentralem Knoten prüfen
-		if (mindmap == null) return null;
-		TreeNode clickedNode = mindmap;
-		double minDistance = point.distance(mindmap.getOrigin());
+		if (tree == null) return null;
+		TreeNode clickedNode = tree;
+		double minDistance = point.distance(tree.getOrigin());
 
 		// Dann alle direkten Kinder des Zentralen Knotens prüfen
-		TreeNode dummy = mindmap.firstChild();
+		TreeNode dummy = tree.firstChild();
 		while (dummy != null) {
 			double distance = point.distance(dummy.getOrigin());
 			if (distance < minDistance) {
@@ -655,8 +655,8 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		}
 
 		// Elter des zentralen Knotens prüfen
-		if (mindmap.parent() != null) {
-			dummy = mindmap.parent();
+		if (tree.parent() != null) {
+			dummy = tree.parent();
 
 			// groß-Elter prüfen
 			if (dummy.parent() != null) {
@@ -693,10 +693,10 @@ public class TreePanel extends JPanel implements MouseListener, MouseWheelListen
 		organizerThread.die();		
 	}
 
-	protected void setParametersFrom(TreePanel mindmapPanel) {
-		mindmap=mindmapPanel.currentMindmap();
-		connectionColor=mindmapPanel.connectionColor;
-		this.setBackground(mindmapPanel.getBackground());
+	protected void setParametersFrom(TreePanel treePanel) {
+		tree=treePanel.currentNode();
+		connectionColor=treePanel.connectionColor;
+		this.setBackground(treePanel.getBackground());
 	}
 
 	public void mouseWheelMoved(MouseWheelEvent arg0) {

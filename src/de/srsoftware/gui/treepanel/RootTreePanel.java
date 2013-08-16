@@ -33,13 +33,13 @@ public class RootTreePanel extends TreePanel {
 
 	public void paint(Graphics g) {
 		super.paint(g);
-		if (mindmap != null) {
+		if (tree != null) {
 			g.setFont(g.getFont().deriveFont(fontSize));
-			boolean wasFolded=mindmap.isFolded();
-			mindmap.setFolded(false);
-			if (mindmap.nodeFile() != null) {
+			boolean wasFolded=tree.isFolded();
+			tree.setFolded(false);
+			if (tree.nodeFile() != null) {
 				try {
-					mindmap.loadFromFile();
+					tree.loadFromFile();
 				} catch (FileNotFoundException e) {
 					System.out.println("Datei nicht gefunden: " + e.getMessage());
 				} catch (IOException e) {
@@ -51,21 +51,21 @@ public class RootTreePanel extends TreePanel {
 				}
 			}
 			TreeNode child;
-			Dimension d=mindmap.nodeDimension(g, this);
+			Dimension d=tree.nodeDimension(g, this);
 			Point center=new Point((getWidth()-d.width)/3,getHeight()/2);
-			moveNodeTowards(mindmap, center);
+			moveNodeTowards(tree, center);
 			if (wasFolded){
-				child=mindmap.firstChild();
+				child=tree.firstChild();
 				while (child!=null) {
-					child.setOrigin(mindmap.getOrigin());
+					child.setOrigin(tree.getOrigin());
 					child=child.next();
 				}
 			}
-			if (!updatedSinceLastChange) mindmap.resetDimension();
-			Point leftCenter=mindmap.getOrigin();
+			if (!updatedSinceLastChange) tree.resetDimension();
+			Point leftCenter=tree.getOrigin();
 			leftCenter.y+=d.height/2;
-			d.height=paint((Graphics2D)g,mindmap,true).height;
-			paintFamily((Graphics2D) g,mindmap,leftCenter,d);
+			d.height=paint((Graphics2D)g,tree,true).height;
+			paintFamily((Graphics2D) g,tree,leftCenter,d);
 		}
 	}
 

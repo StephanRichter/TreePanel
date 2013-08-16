@@ -30,7 +30,7 @@ import de.srsoftware.tools.language.LanguagePack;
 import de.srsoftware.xmlformatter.XmlFormatter;
 
 public class TreeNode {
-	private static TreeSet<TreeNode> changedMindmaps = new TreeSet<TreeNode>(new ObjectComparator());
+	private static TreeSet<TreeNode> changedNodes = new TreeSet<TreeNode>(new ObjectComparator());
 	private TreeNode parent = null; // this variable holds the pointer to the parent node, if given
 	private TreeNode firstChild = null;// this variable holds the pointer to the current node's first child
 	private TreeNode lastChild = null;// this variable holds the pointer to the current node's last child
@@ -58,7 +58,7 @@ public class TreeNode {
 	// */
 
 	/**
-	 * internal method to initialize the MindmapNode
+	 * internal method to initialize the TreeNode
 	 * 
 	 * @param text the text, which is passed to the node's formula
 	 */
@@ -104,9 +104,9 @@ public class TreeNode {
 	}
 
 	/**
-	 * append the given MindmapNode to the current one
+	 * append the given TreeNode to the current one
 	 * 
-	 * @param newChild the MindmapNode to be appended
+	 * @param newChild the TreeNode to be appended
 	 */
 	public void addChild(TreeNode newChild) {
 		
@@ -296,12 +296,12 @@ public class TreeNode {
 
 	public void setLink(URL link) {
 		this.link = link;
-		mindmapChanged();
+		treeChanged();
 	}
 
 	public void setImage(URL fileUrl) {
 		this.nodeImage = (fileUrl == null) ? null : new NodeImage(fileUrl);
-		mindmapChanged();
+		treeChanged();
 	}
 
 	public void loadFromFile() throws FileNotFoundException, IOException, DataFormatException, URISyntaxException {	
@@ -329,16 +329,16 @@ public class TreeNode {
 				
 				TreeNode n = nodeOpenAndChanged(fileUrl);
 				if (n != null) {
-					// TODO wenn ein Mindmap geöffnet wird, das schon offen, geändert und noch ncht gespeichert ist:
-					// dieses Mindmap in eine temporäre Datei schreiben, und diese öffnen
+					// TODO wenn ein Baum geöffnet wird, das schon offen, geändert und noch ncht gespeichert ist:
+					// dieses Baum in eine temporäre Datei schreiben, und diese öffnen
 					URL temp = getTemporaryUrl();
 					if (n.saveTo(temp)) {
 						n.nodeFile = fileUrl;
 						if (Tools.fileIsIntelliMindFile(fileUrl)) loadFromIntellimindFile(temp);
 						if (Tools.fileIsFreeMindFile(fileUrl)) loadFromFreemindFile(temp);
-						changedMindmaps.remove(n);
+						changedNodes.remove(n);
 						this.nodeFile = fileUrl;
-						this.mindmapChanged();
+						this.treeChanged();
 					} else {
 						if (Tools.fileIsIntelliMindFile(fileUrl)) loadFromIntellimindFile(fileUrl);
 						if (Tools.fileIsFreeMindFile(fileUrl)) loadFromFreemindFile(fileUrl);
@@ -425,7 +425,7 @@ public class TreeNode {
 	}
 
 	public static TreeNode nodeOpenAndChanged(URL url) {
-		for (TreeNode n : changedMindmaps) {
+		for (TreeNode n : changedNodes) {
 			URL u = n.nodeFile();
 			if ((u != null) && (url.equals(u)) && n.nodeFileHasBeenLoaded) return n;
 		}
@@ -532,7 +532,7 @@ public class TreeNode {
 				if (line.equals("[UP]")) {
 					if (node.parent()!=null){
 						node = node.parent();
-					} else System.out.println("Mindmap corrupt: UP-command found while at root node.");
+					} else System.out.println("Tree corrupt: UP-command found while at root node.");
 				}
 
 				if (line.startsWith("text=")) {
@@ -546,12 +546,12 @@ public class TreeNode {
 						} catch (MalformedURLException e) {
 							Tools.message("externe Verknüpfung (" + content.substring(5) + ") konnte nicht aufgelöst werden!");
 						}
-					} else { // eingebundenes Unter-Mindmap
+					} else { // eingebundener Teilbaum
 						try {
 							URL nodeURL = Tools.getURLto(this.getRoot().nodeFile.toString(), content);
 							node.nodeFile = nodeURL;
 						} catch (MalformedURLException e) {
-							Tools.message("Eingebettetes Mindmap (" + content + ") konnte nicht aufgelöst werden!");
+							Tools.message("Eingebetteter Baum (" + content + ") konnte nicht aufgelöst werden!");
 						}
 
 					}
@@ -613,7 +613,7 @@ public class TreeNode {
 
 	public void setForeColor(Color c) {
 		this.foregroundColor = c;
-		mindmapChanged();
+		treeChanged();
 
 	}
 
@@ -621,7 +621,7 @@ public class TreeNode {
 		// System.out.println("Hintergrundfarbe wird gesetzt...");
 		if (!c.equals(this.backgroundColor)) {
 			this.backgroundColor = c;
-			mindmapChanged();
+			treeChanged();
 		}
 	}
 
@@ -639,7 +639,7 @@ public class TreeNode {
 		return result;
 	}
 
-	private boolean readMindmapFile(BufferedReader file) throws IOException {
+	private boolean readTreeFile(BufferedReader file) throws IOException {
 		while (file.ready() && this.formula == null) {
 			String tag = Tools.readNextTag(file);
 			if (tag.equals("<icon BUILTIN=\"button_cancel\"/>")) this.parent.formula = new Formula("\\rgb{ff0000,\\nok }" + this.parent.formula.toString());
@@ -671,7 +671,7 @@ public class TreeNode {
 		while (file.ready()) {
 			TreeNode dummy = new TreeNode(this.origin);
 			dummy.parent = this;
-			if (!dummy.readMindmapFile(file)) return true;
+			if (!dummy.readTreeFile(file)) return true;
 			this.addChild(dummy);
 		}
 		return true;
@@ -703,7 +703,7 @@ public class TreeNode {
 			}
 			TreeNode root = this;
 			root.nodeFile = fileUrl;
-			readMindmapFile(fileReader);
+			readTreeFile(fileReader);
 
 			fileReader.close();
 		} catch (InterruptedException e) {
@@ -741,7 +741,7 @@ public class TreeNode {
 
 	public void setNodeImage(NodeImage nodeImage) {
 		this.nodeImage = nodeImage;
-		mindmapChanged();
+		treeChanged();
 	}
 
 	public NodeImage getNodeImage() {
@@ -750,22 +750,22 @@ public class TreeNode {
 
 	public void setFormula(Formula f) {
 		formula = f;
-		mindmapChanged();
+		treeChanged();
 	}
 
 	public void setText(String tx) {
 		formula = new Formula(tx);
-		mindmapChanged();
+		treeChanged();
 	}
 
-	public void mindmapChanged() {
+	public void treeChanged() {
 		TreeNode dummy = this;
 		while (dummy != null && dummy.nodeFile == null) { // sucht nach der Wurzel des aktuellen Teilbaums
-			if (dummy.parent() == null) changedMindmaps.add(dummy); // falls die Wurzel selbst noch nicht gespeichert wurde
+			if (dummy.parent() == null) changedNodes.add(dummy); // falls die Wurzel selbst noch nicht gespeichert wurde
 			dummy = dummy.parent;
 		}
 		if (dummy != null && dummy.nodeFile != null) {
-			changedMindmaps.add(dummy); // fügt die (schon mal gespeicherte) wurzel des aktuellen Teilbaums zur Speicher-Liste hinuzu
+			changedNodes.add(dummy); // fügt die (schon mal gespeicherte) wurzel des aktuellen Teilbaums zur Speicher-Liste hinuzu
 		}
 	}
 
@@ -809,7 +809,7 @@ public class TreeNode {
 					outFile.write("[UP]\r\n");
 				}
 				outFile.close();
-				changedMindmaps.remove(this);
+				changedNodes.remove(this);
 				return true;
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -833,7 +833,7 @@ public class TreeNode {
 	}
 
 	private void saveNode(OutputStreamWriter file, URL filename) throws IOException {
-		// System.out.println("StarMindmap.saveNode("+filename+" , "+node.getText()+");");
+		// System.out.println("TreeNode.saveNode("+filename+" , "+node.getText()+");");
 		file.write("text=" + this.getFormulaCode() + "\r\n");
 		if (nodeImage != null) {
 			Tools.getRelativePath(filename, nodeImage.getUrl());
@@ -853,11 +853,11 @@ public class TreeNode {
 		return result;
 	}
 
-	public static TreeSet<TreeNode> saveChangedMindmaps() {
+	public static TreeSet<TreeNode> saveChangedNodes() {
 		// TODO Auto-generated method stub
 		TreeSet<TreeNode> result = new TreeSet<TreeNode>(new ObjectComparator());
-		while (!changedMindmaps.isEmpty()) {
-			TreeNode dummy = pollFirst(changedMindmaps);
+		while (!changedNodes.isEmpty()) {
+			TreeNode dummy = pollFirst(changedNodes);
 			if (!dummy.save()) result.add(dummy);
 			if (nodeOpenAndChanged(dummy.nodeFile) != null) {
 				System.out.println(languagePack.get("WARNING_CONCURRENT_CHANGES").replaceAll("##", dummy.nodeFile.toString()));
@@ -873,16 +873,16 @@ public class TreeNode {
 		return result;
 	}
 
-	public static boolean existUnsavedMindmaps() {
-		return changedMindmaps.size() > 0;
+	public static boolean existUnsavedNodes() {
+		return changedNodes.size() > 0;
 	}
 
 	public boolean hasUnsavedChanges() {
-		return (changedMindmaps.contains(this.getRoot()));
+		return (changedNodes.contains(this.getRoot()));
 	}
 
 	public static void flushUnsavedChanges() {
-		changedMindmaps.clear();
+		changedNodes.clear();
 	}
 
 	public void addBrother(TreeNode brother) {
@@ -896,7 +896,7 @@ public class TreeNode {
 		nextBrother = brother;
 		if (brother.nextBrother == null)	parent.lastChild = brother;
 		parent.numChildren++;
-		brother.mindmapChanged();
+		brother.treeChanged();
 	}
 
 	public TreeNode clone() {

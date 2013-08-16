@@ -75,7 +75,7 @@ public class StarTreePanel extends TreePanel {
 	public void paint(Graphics g) {
 		super.paint(g);
 		g.setFont(g.getFont().deriveFont(fontSize));
-		paint((Graphics2D)g, mindmap, null, 0);
+		paint((Graphics2D)g, tree, null, 0);
 		updatedSinceLastChange = true;
 	}
 
@@ -165,13 +165,13 @@ public class StarTreePanel extends TreePanel {
 
 	public boolean organize() {
 		float angle = 50f;
-		if (mindmap.parent() == null && mindmap.getNumChildren() == 1) angle += 180f;
-		organize(mindmap, null, new Point(this.getWidth() / 2, this.getHeight() / 2), distance, angle, 0);
+		if (tree.parent() == null && tree.getNumChildren() == 1) angle += 180f;
+		organize(tree, null, new Point(this.getWidth() / 2, this.getHeight() / 2), distance, angle, 0);
 		return true;
 	}
 
 	public void repaint() {
-		if (mindmap != null) organize();
+		if (tree != null) organize();
 		super.repaint();
 	}
 
