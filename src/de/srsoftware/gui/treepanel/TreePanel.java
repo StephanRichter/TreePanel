@@ -109,6 +109,10 @@ import de.srsoftware.tools.language.LanguagePack;
     super.paint(g);
     if (tree==null && backgroundImage!=null) g.drawImage(backgroundImage,(this.getWidth()-backgroundImage.getWidth(this))/2,(this.getHeight()-backgroundImage.getHeight(this))/2,this);
   }
+  
+  public void setBackgroundImage(Image image){
+  	backgroundImage=image;
+  }
 
 	public void addActionListener(ActionListener actionListener) {
 		actionListeners.add(actionListener);
