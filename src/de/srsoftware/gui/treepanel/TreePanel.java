@@ -240,23 +240,32 @@ import de.srsoftware.tools.language.LanguagePack;
 
 	public void appendNewChild(TreeNode newChild) {
 		if (newChild != null) {
+			customizeNode(tree);
 			tree.addChild(newChild);
 			tree.treeChanged();
 			updateView();
 		}
 	}
-
-	public void editTree(TreeNode node) {
-		String oldText = node.getFormulaCode();
-		String text=oldText;
+	
+	public void customizeNode(TreeNode node){
+		String text=node.getFormulaCode();
+		System.out.println("customizeNode("+text+")");
 		if (text.endsWith(".imf")||text.endsWith("{.imf}"))	{
 			text=text.replace("}\\small{", "").replace("\\small{", "").replace("}\\bold{","");
 			text=text.substring(text.lastIndexOf('/')+1);
 			text=text.substring(0,text.lastIndexOf('.'));
+			node.setText(text);
 		}
-		String newText = FormulaInputDialog.readInput(null, languagePack.get("CHANGE_CURRENT_NODES_TEXT"), text);
-		if ((newText != null) && !newText.equals(oldText)) node.setText(newText);
-		updateView();
+	}
+
+	public void editTree(TreeNode node) {
+		String oldText=node.getFormulaCode();
+		customizeNode(node);
+		String newText = FormulaInputDialog.readInput(null, languagePack.get("CHANGE_CURRENT_NODES_TEXT"), node.getFormulaCode());
+		if ((newText != null) && !newText.equals(oldText)) {
+			node.setText(newText);
+			updateView();
+		}
 	}
 
 	protected void showNodeImage() {
