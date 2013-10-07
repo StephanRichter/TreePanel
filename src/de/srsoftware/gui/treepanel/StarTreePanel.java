@@ -110,8 +110,10 @@ public class StarTreePanel extends TreePanel {
 				}
 			}
 		}
-		if (level <= levelLimit) {
+		if (level <= levelLimit) {			
 			boolean hasParent = node.parent() != null;
+			
+			/** calculate angle between linked nodes **/
 			int numLinks = node.getNumChildren() + ((hasParent) ? 1 : 0);
 			double angleDiff = (numLinks == 0) ? 0 : 360 / numLinks;
 
@@ -160,14 +162,15 @@ public class StarTreePanel extends TreePanel {
 				}
 
 			}
-			node.moveTowards(origin);
 		}
+		node.moveTowards(origin);
 	}
 
 	public boolean organize() {
-		float angle = 50f;
-		if (tree.parent() == null && tree.getNumChildren() == 1) angle += 180f;
-		organize(tree, null, new Point(this.getWidth() / 2, this.getHeight() / 2), distance, angle, 0);
+		float startangle = 50f;
+		if (tree.parent() == null && tree.getNumChildren() == 1) startangle += 180f;
+		Point middle=new Point(this.getWidth() / 2, this.getHeight() / 2);
+		organize(tree, null, middle, distance, startangle, 0);
 		return true;
 	}
 

@@ -127,6 +127,10 @@ public class TreeNode {
 	public Point getOrigin() {
 		return new Point(origin);
 	}
+	
+	public void setOrigin(int x, int y){
+		setOrigin(new Point(x,y));
+	}
 
 	public void setOrigin(Point newOrigin) {
 		origin = newOrigin;
@@ -978,17 +982,8 @@ public class TreeNode {
 		}
 	}
 
-	public int move(int dx, int dy) {
-		origin.x=origin.x+dx;
-		origin.y=origin.y+dy;
-		if (dx>dy) return dx;
-		return dy;
-	}
-
 	public void moveTowards(int x, int y) {
-		int dx = (x - origin.x) / 4;
-		int dy = (y - origin.y) / 4;
-		move(dx, dy);
+		setOrigin((3*origin.x + x) / 4,(3*origin.y + y) / 4);
 	}
 
 	public void moveTowards(Point target) {
@@ -996,6 +991,6 @@ public class TreeNode {
 	}
 
 	public void moveTowardsY(int y) {	
-		origin.y=(origin.y+y)/2;
+		setOrigin(origin.x,(origin.y+y)/2);
 	}
 }
