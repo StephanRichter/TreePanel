@@ -214,4 +214,14 @@ public class RootTreePanel extends TreePanel {
 		}
 		g.setStroke(str);
 	}
+
+	@Override
+	public void toogleFold() {
+		TreeNode child = tree.firstChild();
+		while (child!=null) {
+			child.setFolded(true);
+			child=child.next();
+		}
+		updateView();
+	}
 }

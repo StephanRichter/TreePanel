@@ -40,7 +40,7 @@ import de.srsoftware.tools.language.LanguagePack;
  * @author Stephan Richter
  * 
  */
-	public class TreePanel extends JPanel implements MouseListener, MouseWheelListener {
+	public abstract class TreePanel extends JPanel implements MouseListener, MouseWheelListener {
 	private static final long serialVersionUID = -9127677905556355410L;
 	private static final int UP = 1;
 	private static final int DOWN = -1;
@@ -126,7 +126,7 @@ import de.srsoftware.tools.language.LanguagePack;
 		//System.out.println("navigateRight");
 		if (tree.getLink() != null) Tools.execute(tree.getLink());
 		if (tree.firstChild() != null) setTreeTo(tree.firstChild());
-	}
+		}
 
 	public void navigateDown() {
 		if (tree.next() != null)
@@ -135,9 +135,9 @@ import de.srsoftware.tools.language.LanguagePack;
 			TreeNode dummy=tree.parent();
 			if (dummy!=null) {
 				setTreeTo(dummy);
-			sheduleNavigation(DOWN);
-		}
-	}
+			  sheduleNavigation(DOWN);
+	  	}
+  	}
 	}
 	
 	private class NavigationThread extends Thread{
@@ -707,4 +707,6 @@ import de.srsoftware.tools.language.LanguagePack;
 	public void setDistance(int d) {
 		distance = d;
 	}
+
+	public abstract void toogleFold();
 }

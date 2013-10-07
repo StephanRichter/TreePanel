@@ -39,6 +39,7 @@ public class StarTreePanel extends TreePanel {
 			/*
 			 * MindmapNode dummy = node.firstChild(); while (dummy != null) { if (dummy != doNotTraceThis) { Point org = dummy.getOrigin(); if (level < levelLimit - 1) g.drawLine(origin.x, origin.y, org.x, org.y); paint(g, dummy, node, level + 1); } dummy = dummy.next(); } dummy = node.parent(); if (dummy != null && dummy != doNotTraceThis) { Point org = dummy.getOrigin(); if (level < levelLimit - 1) g.drawLine(origin.x, origin.y, org.x, org.y); paint(g, dummy, node, level + 1); }
 			 */
+			
 			TreeNode dummy = node.lastChild();
 			while (dummy!=null) {
 				if (dummy != doNotTraceThis) {
@@ -173,6 +174,10 @@ public class StarTreePanel extends TreePanel {
 	public void repaint() {
 		if (tree != null) organize();
 		super.repaint();
+	}
+
+	@Override
+	public void toogleFold() {
 	}
 
 }
