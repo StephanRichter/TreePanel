@@ -584,9 +584,8 @@ import de.srsoftware.tools.translations.Translations;
 	private void init() {
 		actionListeners = new Vector<ActionListener>();
 		this.setBackground(new Color(0, 155, 255));
-		addMouseWheelListener(this);
-		URL myurl = this.getClass().getResource("/intelliMind.gif");
-		backgroundImage = this.getToolkit().getImage(myurl);
+		addMouseWheelListener(this);		
+		backgroundImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/de/srsoftware/intellimind/intelliMind.gif"));
 	}
 
 	private TreeNode pollFirst(TreeSet<TreeNode> ts) {
