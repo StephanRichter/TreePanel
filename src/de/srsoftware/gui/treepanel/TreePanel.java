@@ -34,7 +34,7 @@ import javax.swing.JPanel;
 import de.srsoftware.formula.FormulaInputDialog;
 import de.srsoftware.tools.GenericFileFilter;
 import de.srsoftware.tools.Tools;
-import de.srsoftware.tools.language.LanguagePack;
+import de.srsoftware.tools.translations.Translations;
 
 /**
  * @author Stephan Richter
@@ -55,12 +55,16 @@ import de.srsoftware.tools.language.LanguagePack;
 	protected Color connectionColor;
 	protected static TreeNode cuttedNode = null;
 	protected TreeThread organizerThread; // Thread, der in regelmäßigen Abständen das Layout aktualisiert
-	protected static LanguagePack languagePack=null;
 	protected boolean updatedSinceLastChange = false;
 	protected int fileLoadLevelLimit = 2; // maximale Tiefe von aktuellem Knoten ausgehend, bei der verlinkte Bäume geladen werden
 	private Image backgroundImage;
 
-
+	public static String _(String text) { 
+		return Translations.get(text);
+	}
+	public static String _(String key, Object insert) {
+		return Translations.get(key, insert);
+	}
 
 	public TreePanel(boolean arg0) {
 		super(arg0);
@@ -95,9 +99,6 @@ import de.srsoftware.tools.language.LanguagePack;
 	}
 
 	private void init() {
-		if (Tools.language.equals("English")){
-			languagePack=new English_TreePanel();  
-		} else languagePack = new German_Treepanel();
 		actionListeners = new Vector<ActionListener>();
 		this.setBackground(new Color(0, 155, 255));
 		addMouseWheelListener(this);
@@ -261,12 +262,14 @@ import de.srsoftware.tools.language.LanguagePack;
 	public void editTree(TreeNode node) {
 		String oldText=node.getFormulaCode();
 		customizeNode(node);
-		String newText = FormulaInputDialog.readInput(null, languagePack.get("CHANGE_CURRENT_NODES_TEXT"), node.getFormulaCode());
+		String newText = FormulaInputDialog.readInput(null, _("Change text of current mindmap node"), node.getFormulaCode());
 		if ((newText != null) && !newText.equals(oldText)) {
 			node.setText(newText);
 			updateView();
 		}
 	}
+	
+
 
 	protected void showNodeImage() {
 		if (tree.getNodeImage() != null) {
@@ -282,24 +285,24 @@ import de.srsoftware.tools.language.LanguagePack;
 
 	public void questForFileToSaveTree(TreeNode node) {
 		String guessedName = Tools.deleteNonFilenameChars(node.getText() + ".imf");
-		String choosenFilename = Tools.saveDialog(this, languagePack.get("SAVE_AS"), guessedName, new GenericFileFilter(languagePack.get("TREE_FILE"), "*.imf"));
+		String choosenFilename = Tools.saveDialog(this, _("save as"), guessedName, new GenericFileFilter(_("file for tree"), "*.imf"));
 		if (choosenFilename == null)
 			node.treeChanged();
 		else {
 			if (!choosenFilename.toUpperCase().endsWith(".IMF") && !choosenFilename.toUpperCase().endsWith(".MM")) {
 				choosenFilename += ".imf";
 			}
-			if (!(new File(choosenFilename)).exists() || JOptionPane.showConfirmDialog(null, languagePack.get("ASK_FOR_OVERWRITE"), languagePack.get("WARNING"), JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+			if (!(new File(choosenFilename)).exists() || JOptionPane.showConfirmDialog(null, _("The file you selected already exists. Overwrite it?"), _("Warning"), JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 				try {
 					URL u = new URL("file://" + choosenFilename);
 					System.out.println(u);
 					if (!node.saveTo(u))
-						JOptionPane.showMessageDialog(null, languagePack.get("SAVE_FAILED").replace("##", choosenFilename), languagePack.get("SAVE_ERROR"), JOptionPane.OK_OPTION);
+						JOptionPane.showMessageDialog(null, _("Sorry, I was not able to save the file as \"#\"!", choosenFilename), _("Error while trying to save"), JOptionPane.OK_OPTION);
 					else {
 						sendActionEvent(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "SetTitle:" + node.getRoot().nodeFile()));
 					}
 				} catch (MalformedURLException e) {
-					System.out.println("Konnte keine URL aus \"" + choosenFilename + "\" basteln!");
+					System.out.println(_("Sorry, I was not able to build an URL from \"#\"!",choosenFilename));
 					node.treeChanged();
 				}
 			}
@@ -388,7 +391,7 @@ import de.srsoftware.tools.language.LanguagePack;
 	}
 
 	public void showNodeDetails() {
-		JOptionPane.showMessageDialog(this, tree.getFullInfo(), "Information", JOptionPane.INFORMATION_MESSAGE);
+		JOptionPane.showMessageDialog(this, tree.getFullInfo(), _("Information"), JOptionPane.INFORMATION_MESSAGE);
 		this.requestFocus();
 	}
 
@@ -484,7 +487,7 @@ import de.srsoftware.tools.language.LanguagePack;
 					} else {
 						boolean include=depth<maxDepth;
 						if (interactive){
-							System.out.println("Warning: interactive export not supported, yet.");
+							System.out.println(_("Warning: interactive export not supported, yet."));
 							// include = Abfrage
 						}
 						if (include) {

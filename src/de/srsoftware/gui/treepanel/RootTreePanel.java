@@ -41,11 +41,11 @@ public class RootTreePanel extends TreePanel {
 				try {
 					tree.loadFromFile();
 				} catch (FileNotFoundException e) {
-					System.out.println("Datei nicht gefunden: " + e.getMessage());
+					System.out.println(_("File not found: ")+ e.getMessage());
 				} catch (IOException e) {
-					System.out.println("Fehler beim Laden von: " + e.getMessage());
+					System.out.println(_("Error while loading: ") + e.getMessage());
 				} catch (DataFormatException e) {
-					System.out.println("Dateityp wird nicht unterstützt: " + e.getMessage());
+					System.out.println(_("File type not supported: ") + e.getMessage());
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}

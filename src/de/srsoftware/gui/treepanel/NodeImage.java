@@ -11,6 +11,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import de.srsoftware.tools.Tools;
+import de.srsoftware.tools.translations.Translations;
 
 public class NodeImage {
 	private URL imageUrl = null;
@@ -30,6 +31,9 @@ public class NodeImage {
 		load(url);
 	}
 
+	private static String _(String key, Object insert) {
+		return Translations.get(key, insert);
+	}
 	public void load(URL url) {
 		if (!Tools.fileIsLocal(url)) {
 			try {
@@ -37,7 +41,7 @@ public class NodeImage {
 			} catch (MalformedURLException e1) {
 				imageUrl = url;
 			}
-			if (!(new File(imageUrl.getFile())).exists()) System.out.println("Bild "+imageUrl+" nicht auffindbar!"); 
+			if (!(new File(imageUrl.getFile())).exists()) System.out.println(_("Could not find image #!",imageUrl)); 
 		} else {
 			imageUrl = url;
 			File testFile=new File(imageUrl.getFile());

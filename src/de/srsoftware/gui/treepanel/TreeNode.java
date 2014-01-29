@@ -26,7 +26,7 @@ import de.srsoftware.tools.FileRecoder;
 import de.srsoftware.tools.Filefilter;
 import de.srsoftware.tools.ObjectComparator;
 import de.srsoftware.tools.Tools;
-import de.srsoftware.tools.language.LanguagePack;
+import de.srsoftware.tools.translations.Translations;
 import de.srsoftware.xmlformatter.XmlFormatter;
 
 public class TreeNode {
@@ -53,9 +53,6 @@ public class TreeNode {
 	private static Color swappedColor = Color.white;
 	private boolean shrinkLargeImages = true;
 	private int maxBackupNumber = 10;
-	 /*private static LanguagePack languagePack=new English_TreePanel(); /*/private static LanguagePack languagePack = new German_Treepanel();
-
-	// */
 
 	/**
 	 * internal method to initialize the TreeNode
@@ -464,6 +461,13 @@ public class TreeNode {
 			}
 		}
 	}
+	
+	private static String _(String text) { 
+		return Translations.get(text);
+	}
+	private static String _(String key, Object insert) {
+		return Translations.get(key, insert);
+	}
 
 	private String formatFormula(String s) {
 		return s.replaceAll("(\\D)(\\d)", "$1\\\\_{$2").replaceAll("(\\d)(\\D)", "$1}$2").replaceAll("(\\d)$","$1}");
@@ -514,8 +518,8 @@ public class TreeNode {
 			while (!fileReader.ready()) {
 				Thread.sleep(waitTime);
 				waitTime *= 2;
-				System.out.println("Datei ist nicht verfügbar. Versuche es erneut in " + String.valueOf(waitTime) + " ms...");
-				if (waitTime > 16000) throw new IOException(fileUrl.toString() + " nicht bereit zum Lesen!");
+				System.out.println(_("File is not available at the moment. Will try again in #ms...",waitTime));
+				if (waitTime > 16000) throw new IOException(_("# not ready to be read!",fileUrl));
 			}
 			TreeNode root = this;
 			root.nodeFile = fileUrl;
@@ -535,7 +539,7 @@ public class TreeNode {
 				if (line.equals("[UP]")) {
 					if (node.parent()!=null){
 						node = node.parent();
-					} else System.out.println("Tree corrupt: UP-command found while at root node.");
+					} else System.out.println(_("Tree corrupt: UP-command found while at root node."));
 				}
 
 				if (line.startsWith("text=")) {
@@ -547,14 +551,14 @@ public class TreeNode {
 						try {
 							node.link = Tools.getURLto(this.getRoot().nodeFile.toString(), content.substring(5));
 						} catch (MalformedURLException e) {
-							Tools.message("externe Verknüpfung (" + content.substring(5) + ") konnte nicht aufgelöst werden!");
+							Tools.message(_("external link (#) could not be resolved!",content.substring(5)));
 						}
 					} else { // eingebundener Teilbaum
 						try {
 							URL nodeURL = Tools.getURLto(this.getRoot().nodeFile.toString(), content);
 							node.nodeFile = nodeURL;
 						} catch (MalformedURLException e) {
-							Tools.message("Eingebetteter Baum (" + content + ") konnte nicht aufgelöst werden!");
+							Tools.message(_("embedded tree (#) could not be resolved!",content));
 						}
 
 					}
@@ -565,7 +569,7 @@ public class TreeNode {
 						URL imageUrl = Tools.getURLto(this.getRoot().nodeFile.toString(), content);
 						node.nodeImage = new NodeImage(imageUrl);
 					} catch (MalformedURLException e) {
-						Tools.message("Pfad zu Datei (" + content + ") konnte nicht aufgelöst werden!");
+						Tools.message(_("was not able to resolve path to file (#)!",content));
 					}
 				}
 				if (line.startsWith("Color1=")) {
@@ -701,8 +705,8 @@ public class TreeNode {
 			while (!fileReader.ready()) {
 				Thread.sleep(waitTime);
 				waitTime *= 2;
-				System.out.println("Datei ist nicht verfügbar. Versuche es erneut in " + String.valueOf(waitTime) + " ms...");
-				if (waitTime > 16000) throw new IOException(fileUrl.toString() + " nicht bereit zum Lesen!");
+				System.out.println(_("File is not available at the moment. Will try again in #ms...",waitTime));
+				if (waitTime > 16000) throw new IOException(_("# not ready to be read!",fileUrl));
 			}
 			TreeNode root = this;
 			root.nodeFile = fileUrl;
@@ -863,7 +867,7 @@ public class TreeNode {
 			TreeNode dummy = pollFirst(changedNodes);
 			if (!dummy.save()) result.add(dummy);
 			if (nodeOpenAndChanged(dummy.nodeFile) != null) {
-				System.out.println(languagePack.get("WARNING_CONCURRENT_CHANGES").replaceAll("##", dummy.nodeFile.toString()));
+				System.out.println(_("Warning! The File # has been concurrently edited at two or more places. Only changes of one instance will be saved to #!\nChanges of other instances will be saved to backup files in the same folder!", new Object[]{dummy.nodeFile,dummy.nodeFile}));
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
@@ -927,7 +931,8 @@ public class TreeNode {
 			}
 			i++;
 		}
-		return "Knoten in Datei:\n" + Tools.shorten(getRoot().nodeFile.toString()) + "\n\nText:\n" + Tools.shorten(getText()) + ((nodeImage == null) ? "" : "\n\nBild:\n" + Tools.shorten(nodeImage.toString())) + ((link == null) ? "" : "\nVerweis:\n" + Tools.shorten(link.toString())) + "\n\nZeichenfarbe: " + foregroundColor.toString() + "\nHintergrundfarbe: " + backgroundColor.toString();
+		
+		return _("Knoten in Datei:\n#\n\nText:\n#\n\nBild:\n#\n\nLink:\n#\n\nTextfarbe: #\nHintergrundfarbe: #",new Object[]{Tools.shorten(getRoot().nodeFile.toString()),Tools.shorten(getText()),nodeImage,link,foregroundColor,backgroundColor});
 
 	}
 
@@ -971,7 +976,7 @@ public class TreeNode {
 	}
 
 	public void waitForLoading() {
-		System.out.println("Waiting for "+this.getText());
+		System.out.println(_("Waiting for #",this.getText()));
 		while (this.nodeFile!=null && !hasBeenLoadedFromFile()) {
 			try {
 				Thread.sleep(100);
