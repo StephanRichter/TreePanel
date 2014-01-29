@@ -285,7 +285,7 @@ import de.srsoftware.tools.translations.Translations;
 
 	public void questForFileToSaveTree(TreeNode node) {
 		String guessedName = Tools.deleteNonFilenameChars(node.getText() + ".imf");
-		String choosenFilename = Tools.saveDialog(this, _("save as"), guessedName, new GenericFileFilter(_("file for tree"), "*.imf"));
+		String choosenFilename = Tools.saveDialog(this, _("save as"), guessedName, new GenericFileFilter(_("mindmap file"), "*.imf"));
 		if (choosenFilename == null)
 			node.treeChanged();
 		else {
