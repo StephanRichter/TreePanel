@@ -10,7 +10,6 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import de.srsoftware.bitmaphandler.BMPLoader;
 import de.srsoftware.tools.Tools;
 
 public class NodeImage {
@@ -51,11 +50,7 @@ public class NodeImage {
 
 		}
 		
-		if (url.toString().toUpperCase().endsWith("BMP")) {
-			image = BMPLoader.load(imageUrl);
-		} else {
-			image = Toolkit.getDefaultToolkit().getImage(imageUrl);
-		}		
+		image = Toolkit.getDefaultToolkit().getImage(imageUrl);
 	}
 
 	public String toString() {
@@ -90,11 +85,7 @@ public class NodeImage {
 	public void reload() {
 		// TODO Auto-generated method stub
 		//System.out.println("reloading image file "+imageUrl);
-		if (imageUrl.toString().toUpperCase().endsWith("BMP")) {
-			image = BMPLoader.load(imageUrl);
-		} else {
-			image = Toolkit.getDefaultToolkit().createImage(imageUrl);
-		}	
+		image = Toolkit.getDefaultToolkit().createImage(imageUrl);
 	}
 
 }

@@ -5,6 +5,5 @@
 	<classpathentry kind="src" path="/Tools"/>
 	<classpathentry kind="src" path="/Formula"/>
 	<classpathentry kind="src" path="/xml-formatter"/>
-	<classpathentry kind="src" path="/BitmapHandling"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
