@@ -14,9 +14,17 @@ import de.srsoftware.tools.Tools;
 import de.srsoftware.tools.translations.Translations;
 
 public class NodeImage {
+	private static String _(String key, Object insert) {
+		return Translations.get(key, insert);
+	}
 	private URL imageUrl = null;
-	private Image image = null;
 	
+	private Image image = null;
+
+	public NodeImage(URL url) {
+		load(url);
+	}
+
 	public NodeImage clone(){
 		try {
 			return new NodeImage(new URL(imageUrl.toString()));
@@ -26,14 +34,23 @@ public class NodeImage {
 		}
 		return null;
 	}
-
-	public NodeImage(URL url) {
-		load(url);
+	public Dimension getDimension(ImageObserver observer) {
+		return new Dimension(image.getWidth(observer), image.getHeight(observer));
 	}
 
-	private static String _(String key, Object insert) {
-		return Translations.get(key, insert);
+	public Dimension getResizedDimension(int maxSquareSize, ImageObserver observer) {
+		if (image==null) return new Dimension();
+		int width = image.getWidth(observer);
+		int height = image.getHeight(observer);
+		if (height > width && height > maxSquareSize) return new Dimension(width * maxSquareSize / height, maxSquareSize);
+		if (height < width && width > maxSquareSize) return new Dimension(maxSquareSize, height * maxSquareSize / width);
+		return new Dimension(width, height);
 	}
+	
+	public URL getUrl(){
+		return imageUrl;
+	}
+
 	public void load(URL url) {
 		if (!Tools.fileIsLocal(url)) {
 			try {
@@ -57,29 +74,8 @@ public class NodeImage {
 		image = Toolkit.getDefaultToolkit().getImage(imageUrl);
 	}
 
-	public String toString() {
-		return imageUrl.toString();
-	}
-	
-	public URL getUrl(){
-		return imageUrl;
-	}
-
 	public void paint(Graphics g, ImageObserver obs, Point pos) {
 		g.drawImage(image, pos.x, pos.y, 100, 200, obs);
-	}
-
-	public Dimension getDimension(ImageObserver observer) {
-		return new Dimension(image.getWidth(observer), image.getHeight(observer));
-	}
-
-	public Dimension getResizedDimension(int maxSquareSize, ImageObserver observer) {
-		if (image==null) return new Dimension();
-		int width = image.getWidth(observer);
-		int height = image.getHeight(observer);
-		if (height > width && height > maxSquareSize) return new Dimension(width * maxSquareSize / height, maxSquareSize);
-		if (height < width && width > maxSquareSize) return new Dimension(maxSquareSize, height * maxSquareSize / width);
-		return new Dimension(width, height);
 	}
 
 	public void paint(Graphics g, ImageObserver observer, Point pos, Dimension size) {		
@@ -90,6 +86,10 @@ public class NodeImage {
 		// TODO Auto-generated method stub
 		//System.out.println("reloading image file "+imageUrl);
 		image = Toolkit.getDefaultToolkit().createImage(imageUrl);
+	}
+
+	public String toString() {
+		return imageUrl.toString();
 	}
 
 }

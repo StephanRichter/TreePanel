@@ -12,7 +12,15 @@ import java.util.zip.DataFormatException;
 
 public class StarTreePanel extends TreePanel {
 	private static final long serialVersionUID = -3898710876180470991L;
+	public static double cos(double pDegree) {
+		return Math.cos(Math.PI * pDegree / 180);
+	}
+	public static double sin(double pDegree) {
+		return Math.sin(Math.PI * pDegree / 180);
+	}
+
 	private int levelLimit = 5; // Zahl der maximalen Tiefe, die ausgehend vom aktuellen Knoten angezeigt wird
+
 	private float parentDistanceFactor = 1.7f;
 
 	public StarTreePanel() {
@@ -25,52 +33,12 @@ public class StarTreePanel extends TreePanel {
 		setParametersFrom(mindmapPanel);
 	}
 
-	private void paint(Graphics2D g, TreeNode node, TreeNode doNotTraceThis, int level) {
-		if (node != null && level < levelLimit) {
-			Font oldFont = g.getFont();
-			float oldSize = oldFont.getSize();
-			if (doNotTraceThis != null) {
-				if (doNotTraceThis.parent() == node) {
-					g.setFont(oldFont.deriveFont(oldSize * 5 / 6));
-				} else
-					g.setFont(oldFont.deriveFont(oldSize / 2));
-			}
-			Point origin = node.getOrigin();
-			/*
-			 * MindmapNode dummy = node.firstChild(); while (dummy != null) { if (dummy != doNotTraceThis) { Point org = dummy.getOrigin(); if (level < levelLimit - 1) g.drawLine(origin.x, origin.y, org.x, org.y); paint(g, dummy, node, level + 1); } dummy = dummy.next(); } dummy = node.parent(); if (dummy != null && dummy != doNotTraceThis) { Point org = dummy.getOrigin(); if (level < levelLimit - 1) g.drawLine(origin.x, origin.y, org.x, org.y); paint(g, dummy, node, level + 1); }
-			 */
-			
-			TreeNode dummy = node.lastChild();
-			while (dummy!=null) {
-				if (dummy != doNotTraceThis) {
-					Point org = dummy.getOrigin();
-					g.setStroke(new BasicStroke(g.getFont().getSize()/4));
-					if (level < levelLimit - 1) drawConnection(g,origin.x, origin.y, org.x, org.y);
-					paint(g, dummy, node, level + 1);
-				}
-				dummy = dummy.prev();
-			}
-			dummy = node.parent();
-			if (dummy != null && dummy != doNotTraceThis) {
-				Point org = dummy.getOrigin();
-				g.setStroke(new BasicStroke(g.getFont().getSize()/3));
-				if (level < levelLimit - 1) drawConnection(g,origin.x, origin.y, org.x, org.y);
-				paint(g, dummy, node, level + 1);
-			}
-			g.setFont(oldFont);
-			g.setColor(connectionColor);
-			g.setStroke(new BasicStroke(g.getFont().getSize()/7));
-			if (!updatedSinceLastChange) node.resetDimension();
-			if (level < 2)
-				node.paint(g, this);
-			else
-				node.paintWithoutImages(g, this);
-		}
-	}
-
-	private void drawConnection(Graphics g, int x, int y, int x2, int y2) {
-		g.setColor(connectionColor);
-		g.drawLine(x, y, x2, y2);
+	public boolean organize() {
+		float startangle = 50f;
+		if (tree.parent() == null && tree.getNumChildren() == 1) startangle += 180f;
+		Point middle=new Point(this.getWidth() / 2, this.getHeight() / 2);
+		organize(tree, null, middle, distance, startangle, 0);
+		return true;
 	}
 
 	public void paint(Graphics g) {
@@ -80,12 +48,18 @@ public class StarTreePanel extends TreePanel {
 		updatedSinceLastChange = true;
 	}
 
-	public static double sin(double pDegree) {
-		return Math.sin(Math.PI * pDegree / 180);
+	public void repaint() {
+		if (tree != null) organize();
+		super.repaint();
 	}
 
-	public static double cos(double pDegree) {
-		return Math.cos(Math.PI * pDegree / 180);
+	@Override
+	public void toogleFold() {
+	}
+
+	private void drawConnection(Graphics g, int x, int y, int x2, int y2) {
+		g.setColor(connectionColor);
+		g.drawLine(x, y, x2, y2);
 	}
 
 	private Point getTargetPos(Point origin, double angle, int dist) {
@@ -166,21 +140,47 @@ public class StarTreePanel extends TreePanel {
 		node.moveTowards(origin);
 	}
 
-	public boolean organize() {
-		float startangle = 50f;
-		if (tree.parent() == null && tree.getNumChildren() == 1) startangle += 180f;
-		Point middle=new Point(this.getWidth() / 2, this.getHeight() / 2);
-		organize(tree, null, middle, distance, startangle, 0);
-		return true;
-	}
-
-	public void repaint() {
-		if (tree != null) organize();
-		super.repaint();
-	}
-
-	@Override
-	public void toogleFold() {
+	private void paint(Graphics2D g, TreeNode node, TreeNode doNotTraceThis, int level) {
+		if (node != null && level < levelLimit) {
+			Font oldFont = g.getFont();
+			float oldSize = oldFont.getSize();
+			if (doNotTraceThis != null) {
+				if (doNotTraceThis.parent() == node) {
+					g.setFont(oldFont.deriveFont(oldSize * 5 / 6));
+				} else
+					g.setFont(oldFont.deriveFont(oldSize / 2));
+			}
+			Point origin = node.getOrigin();
+			/*
+			 * MindmapNode dummy = node.firstChild(); while (dummy != null) { if (dummy != doNotTraceThis) { Point org = dummy.getOrigin(); if (level < levelLimit - 1) g.drawLine(origin.x, origin.y, org.x, org.y); paint(g, dummy, node, level + 1); } dummy = dummy.next(); } dummy = node.parent(); if (dummy != null && dummy != doNotTraceThis) { Point org = dummy.getOrigin(); if (level < levelLimit - 1) g.drawLine(origin.x, origin.y, org.x, org.y); paint(g, dummy, node, level + 1); }
+			 */
+			
+			TreeNode dummy = node.lastChild();
+			while (dummy!=null) {
+				if (dummy != doNotTraceThis) {
+					Point org = dummy.getOrigin();
+					g.setStroke(new BasicStroke(g.getFont().getSize()/4));
+					if (level < levelLimit - 1) drawConnection(g,origin.x, origin.y, org.x, org.y);
+					paint(g, dummy, node, level + 1);
+				}
+				dummy = dummy.prev();
+			}
+			dummy = node.parent();
+			if (dummy != null && dummy != doNotTraceThis) {
+				Point org = dummy.getOrigin();
+				g.setStroke(new BasicStroke(g.getFont().getSize()/3));
+				if (level < levelLimit - 1) drawConnection(g,origin.x, origin.y, org.x, org.y);
+				paint(g, dummy, node, level + 1);
+			}
+			g.setFont(oldFont);
+			g.setColor(connectionColor);
+			g.setStroke(new BasicStroke(g.getFont().getSize()/7));
+			if (!updatedSinceLastChange) node.resetDimension();
+			if (level < 2)
+				node.paint(g, this);
+			else
+				node.paintWithoutImages(g, this);
+		}
 	}
 
 }

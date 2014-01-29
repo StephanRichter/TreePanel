@@ -69,6 +69,94 @@ public class RootTreePanel extends TreePanel {
 		}
 	}
 
+	@Override
+	public void toogleFold() {
+		TreeNode child = tree.firstChild();
+		while (child!=null) {
+			child.setFolded(true);
+			child=child.next();
+		}
+		updateView();
+	}
+
+	private void drawConnection(Graphics gr, Point p1, Point p2) {
+		Graphics2D g = (Graphics2D) gr;
+		Stroke str = g.getStroke();
+		g.setStroke(new BasicStroke(g.getFont().getSize()/5));
+		g.setColor(connectionColor);
+		int dx=p2.x-p1.x;
+		int dy=p1.y-p2.y;
+		if (dy>0){
+			g.drawArc(p1.x-dx/2, p2.y, dx, dy, 270, 90);
+			g.drawArc(p1.x+dx/2, p2.y, dx, dy, 90, 90);
+		} else {
+			g.drawArc(p1.x-dx/2, p1.y, dx, -dy, 0, 90);
+			g.drawArc(p1.x+dx/2, p1.y, dx, -dy, 180, 90);
+		}
+		g.setStroke(str);
+	}
+
+	private Dimension paint(Graphics2D g, TreeNode mindmap, boolean draw) {
+		if (!this.contains(mindmap.getOrigin())){
+			mindmap.setFolded(true);
+			return new Dimension(0,0);
+		}
+		if (!updatedSinceLastChange) mindmap.resetDimension();
+		Dimension ownDim = mindmap.nodeDimension(g, this);
+		if (draw) mindmap.paint(g, this); 
+		g.setFont(g.getFont().deriveFont(fontSize*0.8f));
+
+		Dimension childDim = mindmap.isFolded()?new Dimension(0,0):paintChildren(g, null, mindmap, false);
+		Dimension result = new Dimension(ownDim.width + childDim.width + distance, Math.max(ownDim.height, childDim.height));
+		if (draw) {
+			Point leftCenter = mindmap.getOrigin();
+						
+			leftCenter.x += ownDim.width;
+			leftCenter.y += ownDim.height/2;
+			if (mindmap.isFolded()){ 
+				Stroke str = g.getStroke();
+				g.setStroke(new BasicStroke(g.getFont().getSize()/5));
+				g.drawOval(leftCenter.x, leftCenter.y-dist/2, 7, 7);
+				g.setStroke(str);
+			} else paintChildren(g, leftCenter, mindmap, true);
+		}
+		return result;
+	}
+
+	private Dimension paintChildren(Graphics2D g, Point leftCenter, TreeNode mindmap, boolean draw) {
+		int width = 0;
+		int height = dist;
+		TreeNode child = mindmap.firstChild();
+		while (child != null) {
+			Dimension d = paint(g,child, false);
+			height += d.height+dist;
+			width = Math.max(width, d.width);
+			child = child.next();
+		}
+		if (draw) {
+			height-=dist;
+			Point currentOrigin=new Point(leftCenter);
+			currentOrigin.y-=height/2;
+			currentOrigin.x+=distance;
+			child = mindmap.firstChild();
+			while (child != null) {
+				Dimension d=paint(g,child,false);
+				Dimension d2=child.nodeDimension(g, this);
+				Point target=new Point(currentOrigin);
+				target.y+=(d.height-d2.height)/2;
+				child.moveTowards(target);
+				paint(g,child, true);
+				currentOrigin.y+=d.height+dist;
+				Point p=child.getOrigin();
+				p.y+=d2.height/2;
+				p.x-=2;
+				drawConnection(g,leftCenter,p);
+				child = child.next();
+			}
+		}
+		return new Dimension(width, height);
+	}
+
 	private void paintFamily(Graphics2D g, TreeNode mindmap,Point leftCenter, Dimension mindmapDimension) {
 		TreeNode parent=mindmap.parent();
 		TreeSet<Point> points=new TreeSet<Point>(ObjectComparator.get());
@@ -135,93 +223,5 @@ public class RootTreePanel extends TreePanel {
 			parent.paint(g, this);
 			paintFamily(g, parent, leftCenter, mindmapDimension);
 		}
-	}
-
-	private Dimension paint(Graphics2D g, TreeNode mindmap, boolean draw) {
-		if (!this.contains(mindmap.getOrigin())){
-			mindmap.setFolded(true);
-			return new Dimension(0,0);
-		}
-		if (!updatedSinceLastChange) mindmap.resetDimension();
-		Dimension ownDim = mindmap.nodeDimension(g, this);
-		if (draw) mindmap.paint(g, this); 
-		g.setFont(g.getFont().deriveFont(fontSize*0.8f));
-
-		Dimension childDim = mindmap.isFolded()?new Dimension(0,0):paintChildren(g, null, mindmap, false);
-		Dimension result = new Dimension(ownDim.width + childDim.width + distance, Math.max(ownDim.height, childDim.height));
-		if (draw) {
-			Point leftCenter = mindmap.getOrigin();
-						
-			leftCenter.x += ownDim.width;
-			leftCenter.y += ownDim.height/2;
-			if (mindmap.isFolded()){ 
-				Stroke str = g.getStroke();
-				g.setStroke(new BasicStroke(g.getFont().getSize()/5));
-				g.drawOval(leftCenter.x, leftCenter.y-dist/2, 7, 7);
-				g.setStroke(str);
-			} else paintChildren(g, leftCenter, mindmap, true);
-		}
-		return result;
-	}
-
-	private Dimension paintChildren(Graphics2D g, Point leftCenter, TreeNode mindmap, boolean draw) {
-		int width = 0;
-		int height = dist;
-		TreeNode child = mindmap.firstChild();
-		while (child != null) {
-			Dimension d = paint(g,child, false);
-			height += d.height+dist;
-			width = Math.max(width, d.width);
-			child = child.next();
-		}
-		if (draw) {
-			height-=dist;
-			Point currentOrigin=new Point(leftCenter);
-			currentOrigin.y-=height/2;
-			currentOrigin.x+=distance;
-			child = mindmap.firstChild();
-			while (child != null) {
-				Dimension d=paint(g,child,false);
-				Dimension d2=child.nodeDimension(g, this);
-				Point target=new Point(currentOrigin);
-				target.y+=(d.height-d2.height)/2;
-				child.moveTowards(target);
-				paint(g,child, true);
-				currentOrigin.y+=d.height+dist;
-				Point p=child.getOrigin();
-				p.y+=d2.height/2;
-				p.x-=2;
-				drawConnection(g,leftCenter,p);
-				child = child.next();
-			}
-		}
-		return new Dimension(width, height);
-	}
-
-	private void drawConnection(Graphics gr, Point p1, Point p2) {
-		Graphics2D g = (Graphics2D) gr;
-		Stroke str = g.getStroke();
-		g.setStroke(new BasicStroke(g.getFont().getSize()/5));
-		g.setColor(connectionColor);
-		int dx=p2.x-p1.x;
-		int dy=p1.y-p2.y;
-		if (dy>0){
-			g.drawArc(p1.x-dx/2, p2.y, dx, dy, 270, 90);
-			g.drawArc(p1.x+dx/2, p2.y, dx, dy, 90, 90);
-		} else {
-			g.drawArc(p1.x-dx/2, p1.y, dx, -dy, 0, 90);
-			g.drawArc(p1.x+dx/2, p1.y, dx, -dy, 180, 90);
-		}
-		g.setStroke(str);
-	}
-
-	@Override
-	public void toogleFold() {
-		TreeNode child = tree.firstChild();
-		while (child!=null) {
-			child.setFolded(true);
-			child=child.next();
-		}
-		updateView();
 	}
 }

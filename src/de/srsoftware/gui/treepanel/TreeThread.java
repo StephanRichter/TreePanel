@@ -6,20 +6,16 @@ import javax.swing.JPanel;
 public class TreeThread extends Thread {
 	private JPanel mapper=null;
 	private int i=200;
-	public void setTreeMapper(JPanel treeMapper){
-		mapper=treeMapper;
-	}
-	
 	public void die(){
 		i=-1;
-	}	
+	}
 	
 	public void go(){
 		if (i>=0) // don't restart after thread was asked to die!
 			i=30;
-	}
+	}	
 	
-  public void run(){
+	public void run(){
   	i=25;
   	while (i>=0){
   		try {
@@ -31,4 +27,8 @@ public class TreeThread extends Thread {
 			} catch (InterruptedException e) {}
   	}
   }
+	
+  public void setTreeMapper(JPanel treeMapper){
+		mapper=treeMapper;
+	}
 }

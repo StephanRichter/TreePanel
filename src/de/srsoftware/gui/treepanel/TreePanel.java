@@ -41,106 +41,6 @@ import de.srsoftware.tools.translations.Translations;
  * 
  */
 	public abstract class TreePanel extends JPanel implements MouseListener, MouseWheelListener {
-	private static final long serialVersionUID = -9127677905556355410L;
-	private static final int UP = 1;
-	private static final int DOWN = -1;
-	protected static Color backgroundTraceColor = null;
-	protected static Color foregroundTraceColor = null;
-	private Vector<ActionListener> actionListeners;
-	protected int distance = 100; // Basis-Distanz zwischen den Knoten des Baumes
-	private float distanceRatio = 6.5f;
-	protected static float fontSize = 18f;
-	private TreeSet<String> exportedFiles = null;
-	public TreeNode tree; // der Baum, das vom Panel dargestellt wird
-	protected Color connectionColor;
-	protected static TreeNode cuttedNode = null;
-	protected TreeThread organizerThread; // Thread, der in regelmäßigen Abständen das Layout aktualisiert
-	protected boolean updatedSinceLastChange = false;
-	protected int fileLoadLevelLimit = 2; // maximale Tiefe von aktuellem Knoten ausgehend, bei der verlinkte Bäume geladen werden
-	private Image backgroundImage;
-
-	public static String _(String text) { 
-		return Translations.get(text);
-	}
-	public static String _(String key, Object insert) {
-		return Translations.get(key, insert);
-	}
-
-	public TreePanel(boolean arg0) {
-		super(arg0);
-		init();
-	}
-
-	public TreePanel(LayoutManager arg0) {
-		super(arg0);
-		init();
-	}
-
-	public TreePanel(LayoutManager arg0, boolean arg1) {
-		super(arg0, arg1);
-		init();
-	}
-
-	public TreePanel() {
-		super();		
-		init();
-		organizerThread = new TreeThread();
-		organizerThread.setTreeMapper(this);
-		organizerThread.start();
-		addMouseListener(this);
-	}
-	
-	public Point center(){
-		return new Point(getWidth()/2,getHeight()/2);
-	}
-	
-	public void pushThread() {
-		if (organizerThread != null) organizerThread.go();
-	}
-
-	private void init() {
-		actionListeners = new Vector<ActionListener>();
-		this.setBackground(new Color(0, 155, 255));
-		addMouseWheelListener(this);
-		URL myurl = this.getClass().getResource("/intelliMind.gif");
-		backgroundImage = this.getToolkit().getImage(myurl);
-	}
-	
-  public void paint(Graphics g){
-    super.paint(g);
-    if (tree==null && backgroundImage!=null) g.drawImage(backgroundImage,(this.getWidth()-backgroundImage.getWidth(this))/2,(this.getHeight()-backgroundImage.getHeight(this))/2,this);
-  }
-  
-  public void setBackgroundImage(Image image){
-  	backgroundImage=image;
-  }
-
-	public void addActionListener(ActionListener actionListener) {
-		actionListeners.add(actionListener);
-	}
-
-	public void navigateLeft() {
-		if (tree.parent() != null) setTreeTo(tree.parent());
-	}
-
-	public void navigateRight() {
-		//System.out.println("navigateRight");
-		if (tree.getLink() != null) Tools.execute(tree.getLink());
-		if (tree.firstChild() != null) setTreeTo(tree.firstChild());
-		}
-
-	public void navigateDown() {
-		if (tree.next() != null)
-			setTreeTo(tree.next());
-		else {			
-			TreeNode dummy=tree.parent();
-			if (dummy!=null) {
-				setTreeTo(dummy);
-			  sheduleNavigation(DOWN);
-	  	}
-  	}
-	}
-	
 	private class NavigationThread extends Thread{
 		private int direction;
 		public NavigationThread(int direction) {
@@ -165,10 +65,260 @@ import de.srsoftware.tools.translations.Translations;
 			}
 		}
 	}
+	private static final long serialVersionUID = -9127677905556355410L;
+	private static final int UP = 1;
+	private static final int DOWN = -1;
+	protected static Color backgroundTraceColor = null;
+	protected static Color foregroundTraceColor = null;
+	private Vector<ActionListener> actionListeners;
+	protected int distance = 100; // Basis-Distanz zwischen den Knoten des Baumes
+	private float distanceRatio = 6.5f;
+	protected static float fontSize = 18f;
+	private TreeSet<String> exportedFiles = null;
+	public TreeNode tree; // der Baum, das vom Panel dargestellt wird
+	protected Color connectionColor;
+	protected static TreeNode cuttedNode = null;
+	public static String _(String text) { 
+		return Translations.get(text);
+	}
+	public static String _(String key, Object insert) {
+		return Translations.get(key, insert);
+	}
+	protected TreeThread organizerThread; // Thread, der in regelmäßigen Abständen das Layout aktualisiert
 
-	private void sheduleNavigation(int direction) {
-		(new NavigationThread(direction)).start();
-		
+	protected boolean updatedSinceLastChange = false;
+	protected int fileLoadLevelLimit = 2; // maximale Tiefe von aktuellem Knoten ausgehend, bei der verlinkte Bäume geladen werden
+
+	private Image backgroundImage;
+
+	public TreePanel() {
+		super();		
+		init();
+		organizerThread = new TreeThread();
+		organizerThread.setTreeMapper(this);
+		organizerThread.start();
+		addMouseListener(this);
+	}
+
+	public TreePanel(boolean arg0) {
+		super(arg0);
+		init();
+	}
+
+	public TreePanel(LayoutManager arg0) {
+		super(arg0);
+		init();
+	}
+	
+	public TreePanel(LayoutManager arg0, boolean arg1) {
+		super(arg0, arg1);
+		init();
+	}
+	
+	public void addActionListener(ActionListener actionListener) {
+		actionListeners.add(actionListener);
+	}
+
+	public void appendNewBrother(TreeNode createNewNode) {
+		tree.addBrother(createNewNode);
+		setTreeTo(createNewNode);
+	}
+	
+  public void appendNewChild(TreeNode newChild) {
+		if (newChild != null) {
+			customizeNode(tree);
+			tree.addChild(newChild);
+			tree.treeChanged();
+			updateView();
+		}
+	}
+  
+  public Point center(){
+		return new Point(getWidth()/2,getHeight()/2);
+	}
+
+	public void copy() {
+		cuttedNode = tree.clone();
+		copyToClipboard();
+	}
+
+	public TreeNode currentNode() {
+		return tree;
+	}
+
+	public void customizeNode(TreeNode node){
+		String text=node.getFormulaCode();
+		System.out.println("customizeNode("+text+")");
+		if (text.endsWith(".imf")||text.endsWith("{.imf}"))	{
+			text=text.replace("}\\small{", "").replace("\\small{", "").replace("}\\bold{","");
+			text=text.substring(text.lastIndexOf('/')+1);
+			text=text.substring(0,text.lastIndexOf('.'));
+			node.setText(text);
+		}
+	}
+
+	public void cut() {
+		if (tree.parent() != null) {
+			cuttedNode = tree;
+			tree.cutoff();
+			tree.parent().treeChanged();
+			if (tree.prev() != null) {
+				setTreeTo(tree.prev());
+			} else {
+				if (tree.next() != null) {
+					setTreeTo(tree.next());
+				} else {
+					setTreeTo(tree.parent());
+				}
+			}
+		}
+	}
+	
+	public void decreaseDistance() {
+		distance -= 10;
+		updateView();
+	}
+
+	public void deleteActive() {
+		TreeNode dummy = tree.prev();
+		if (dummy == null) dummy = tree.next();
+		if (dummy == null) dummy = tree.parent();
+		if (dummy != null) {
+			tree.cutoff();
+			tree.parent().treeChanged();
+			setTreeTo(dummy);
+		}
+	}
+
+	public void deleteActiveImage() {
+		tree.setImage(null);
+	}
+
+	public void deleteActiveLink() {
+		tree.setLink(null);
+	}
+
+	public void editNode() {
+		editTree(tree);
+		requestFocus();
+	}
+
+	public void editTree(TreeNode node) {
+		String oldText=node.getFormulaCode();
+		customizeNode(node);
+		String newText = FormulaInputDialog.readInput(null, _("Change text of current mindmap node"), node.getFormulaCode());
+		if ((newText != null) && !newText.equals(oldText)) {
+			node.setText(newText);
+			updateView();
+		}
+	}
+
+	public void flushTreeChanges() {
+		TreeNode.flushUnsavedChanges();
+	}
+
+	public int getDistance() {
+		return distance;
+	}
+
+
+	public float getTextSize() {
+		return fontSize;
+	}
+
+	public boolean hasUnsavedNodes() {
+		return TreeNode.existUnsavedNodes();
+	}
+	
+	public void increaseDistance() {
+		distance += 10;
+		updateView();
+	}
+
+	public void mouseClicked(MouseEvent arg0) {}
+	
+
+
+	public void mouseEntered(MouseEvent arg0) {}
+
+	public void mouseExited(MouseEvent arg0) {}
+
+	public void mousePressed(MouseEvent arg0) {
+		// Bestimmen des geklcikten Knotens
+		TreeNode clickedNode = getNodeAt(arg0.getPoint());
+		// bei Doppelklick: Aktion auslösen
+		if (arg0.getClickCount() > 1) {
+			if (tree.getLink() != null)
+				// Ausführen, falls Verknüpfung
+				Tools.execute(tree.getLink());
+			else
+				// Bearbeiten, falls normaler Knoten
+				editTree(clickedNode);
+		} else {
+			if (arg0.getButton() == MouseEvent.BUTTON2) {
+				// Knoten-Text in Zwischenablage kopieren
+				copyToClipboard(clickedNode);
+			} else {
+				// zu Knoten wechseln oder Bild vergrößern
+				if (tree != null) {
+					if (tree == clickedNode)
+						// wenn geklickter Knoten schon im Zentrum ist: Bild ggf. vergrößern
+						showNodeImage();
+					else {
+						// wenn geklickter Knoten in der Peripherie: zentrieren
+						setTreeTo(clickedNode);
+					}
+				}
+			}
+		}
+	}
+
+	public void mouseReleased(MouseEvent arg0) {}
+
+	public void mouseWheelMoved(MouseWheelEvent arg0) {
+		if (arg0.getWheelRotation()==-1){
+			this.setTextLarger();
+			distance*=1.1;
+		} else
+		if (arg0.getWheelRotation()==1){
+			this.setTextSmaller();
+			distance*=0.9;
+		}
+	}
+
+	public void navigateDown() {
+		if (tree.next() != null)
+			setTreeTo(tree.next());
+		else {			
+			TreeNode dummy=tree.parent();
+			if (dummy!=null) {
+				setTreeTo(dummy);
+			  sheduleNavigation(DOWN);
+	  	}
+  	}
+	}
+
+	public void navigateLeft() {
+		if (tree.parent() != null) setTreeTo(tree.parent());
+	}
+
+	public void navigateRight() {
+		//System.out.println("navigateRight");
+		if (tree.getLink() != null) Tools.execute(tree.getLink());
+		if (tree.firstChild() != null) setTreeTo(tree.firstChild());
+		}
+
+	public void navigateToEnd() {
+		if (tree.firstChild() != null) {
+			TreeNode dummy = tree.firstChild();
+			while (dummy.next() != null)
+				dummy = dummy.next();
+			setTreeTo(dummy);
+		}
+	}
+
+	public void navigateToRoot() {
+		while (tree.parent() != null) setTreeTo(tree.parent());
 	}
 
 	public void navigateUp() {
@@ -185,102 +335,20 @@ import de.srsoftware.tools.translations.Translations;
 		}
 	}
 
-	public void navigateToEnd() {
-		if (tree.firstChild() != null) {
-			TreeNode dummy = tree.firstChild();
-			while (dummy.next() != null)
-				dummy = dummy.next();
-			setTreeTo(dummy);
+	public void paint(Graphics g){
+    super.paint(g);
+    if (tree==null && backgroundImage!=null) g.drawImage(backgroundImage,(this.getWidth()-backgroundImage.getWidth(this))/2,(this.getHeight()-backgroundImage.getHeight(this))/2,this);
+  }
+
+	public void paste() {
+		if (tree.parent() != null && cuttedNode != null) {
+			appendNewBrother(cuttedNode);
+			cuttedNode = cuttedNode.clone();
 		}
 	}
 
-	public void deleteActive() {
-		TreeNode dummy = tree.prev();
-		if (dummy == null) dummy = tree.next();
-		if (dummy == null) dummy = tree.parent();
-		if (dummy != null) {
-			tree.cutoff();
-			tree.parent().treeChanged();
-			setTreeTo(dummy);
-		}
-	}
-
-	protected void setTreeTo(TreeNode newNode) {
-		//System.out.println("setTreeTo("+newNode.getText()+")");
-		if (newNode == null) return; // falls kein Knoten zum zentrieren übergeben wurde: abbrechen
-		if (backgroundTraceColor != null) newNode.setBGColor(backgroundTraceColor); // falls die Hintergrundfarbe verschleppt wird: Hintergrundfarbe zum Ziel-Knoten übertragen
-		if (foregroundTraceColor != null) newNode.setForeColor(foregroundTraceColor); // falls die Vordergrundfarbe verschleppt wird: Vordergrundfarbe zum Ziel-Knoten übertragen
-		tree.shrinkImages();// falls Bild des alten Zentrums groß war: verkleinern
-		tree = newNode; // neuen Knoten zentrieren
-		propagateCurrentFile(); // die frohe Nachricht vom neuen Knoten verbreiten
-		updateView(); // Ansicht aktualisieren
-	}
-
-	protected void sendActionEvent(ActionEvent actionEvent) {
-		for (ActionListener a : actionListeners)
-			a.actionPerformed(actionEvent);
-	}
-
-	protected void propagateCurrentFile() {
-		//System.out.println("propagateCurrentFile");
-		URL path = tree.getRoot().nodeFile();
-		
-		if (path != null) {
-			String title = path.toString();
-			if (tree.hasUnsavedChanges()) title += " (*)";
-			//System.out.println("set title to "+title);
-			sendActionEvent(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "SetTitle:" + title));
-		}
-	}
-
-
-	public void setTree(TreeNode root) {
-		tree = root;
-		organizerThread.go();		
-	}
-
-	public void appendNewChild(TreeNode newChild) {
-		if (newChild != null) {
-			customizeNode(tree);
-			tree.addChild(newChild);
-			tree.treeChanged();
-			updateView();
-		}
-	}
-	
-	public void customizeNode(TreeNode node){
-		String text=node.getFormulaCode();
-		System.out.println("customizeNode("+text+")");
-		if (text.endsWith(".imf")||text.endsWith("{.imf}"))	{
-			text=text.replace("}\\small{", "").replace("\\small{", "").replace("}\\bold{","");
-			text=text.substring(text.lastIndexOf('/')+1);
-			text=text.substring(0,text.lastIndexOf('.'));
-			node.setText(text);
-		}
-	}
-
-	public void editTree(TreeNode node) {
-		String oldText=node.getFormulaCode();
-		customizeNode(node);
-		String newText = FormulaInputDialog.readInput(null, _("Change text of current mindmap node"), node.getFormulaCode());
-		if ((newText != null) && !newText.equals(oldText)) {
-			node.setText(newText);
-			updateView();
-		}
-	}
-	
-
-
-	protected void showNodeImage() {
-		if (tree.getNodeImage() != null) {
-			tree.changeImageShrinkOption();
-			updateView();
-		}
-	}
-
-	public void editNode() {
-		editTree(tree);
-		requestFocus();
+	public void pushThread() {
+		if (organizerThread != null) organizerThread.go();
 	}
 
 	public void questForFileToSaveTree(TreeNode node) {
@@ -309,10 +377,16 @@ import de.srsoftware.tools.translations.Translations;
 		}
 	}
 
-	private TreeNode pollFirst(TreeSet<TreeNode> ts) {
-		TreeNode result = ts.first();
-		ts.remove(result);
-		return result;
+	public void refreshView() {
+		if (tree.getNodeImage() != null) {
+			tree.getNodeImage().reload();
+			updateView();
+		}
+	}
+
+	public void saveCurrentFork() {
+		questForFileToSaveTree(tree);
+		if (tree.parent() != null) tree.parent().treeChanged();
 	}
 
 	public void saveNodes() {
@@ -322,72 +396,76 @@ import de.srsoftware.tools.translations.Translations;
 		propagateCurrentFile();
 	}
 
-	public boolean hasUnsavedNodes() {
-		return TreeNode.existUnsavedNodes();
+	public void saveRoot() {
+		questForFileToSaveTree(tree.getSuperRoot());
 	}
 
-	public void flushTreeChanges() {
-		TreeNode.flushUnsavedChanges();
+	public void setBackground(Color bg){
+		super.setBackground(bg);
+		connectionColor = Tools.colorComplement(bg);
 	}
 
-	public void saveCurrentFork() {
-		questForFileToSaveTree(tree);
-		if (tree.parent() != null) tree.parent().treeChanged();
+	public void setBackgroundImage(Image image){
+  	backgroundImage=image;
+  }
+
+	public void setBounds(int x, int y, int width, int height) {
+		super.setBounds(x, y, width, height);
+		distance = (int) (width / distanceRatio);
+		updateView();
+	}
+
+	public void setBounds(Rectangle r) {
+		setBounds(r.x, r.y, r.width, r.height);
+	}
+
+	public void setCurrentBackgroundColor(Color c) {
+		if (c != null) tree.setBGColor(c);
+	}
+
+	public void setCurrentForegroundColor(Color c) {
+		if (c != null) tree.setForeColor(c);
+	}
+
+	public void setDistance(int d) {
+		distance = d;
 	}
 
 	public void setImageOfCurrentNode(NodeImage nodeImage) {
 		if (nodeImage != null) tree.setNodeImage(nodeImage);
 	}
 
-	public void appendNewBrother(TreeNode createNewNode) {
-		tree.addBrother(createNewNode);
-		setTreeTo(createNewNode);
+	public void setLinkOfCurrentNode(URL link) {
+		tree.setLink(link);
 	}
 
-	public TreeNode currentNode() {
-		return tree;
+	public void setSize(Dimension d) {
+		setSize(d.width, d.height);
 	}
 
-	public void cut() {
-		if (tree.parent() != null) {
-			cuttedNode = tree;
-			tree.cutoff();
-			tree.parent().treeChanged();
-			if (tree.prev() != null) {
-				setTreeTo(tree.prev());
-			} else {
-				if (tree.next() != null) {
-					setTreeTo(tree.next());
-				} else {
-					setTreeTo(tree.parent());
-				}
-			}
-		}
+	public void setSize(int width, int height) {
+		super.setSize(width, height);
+		distance = (int) (width / distanceRatio);
+		updateView();
 	}
 
-	protected void copyToClipboard(TreeNode node) {
-		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		clipboard.setContents(new StringSelection(node.getText() + '\n'), null);
+	public void setTextLarger() {
+		fontSize *= 1.1;
+		updateView();
 	}
 
-	private void copyToClipboard() {
-		copyToClipboard(tree);
+	public void setTextSize(float fs) {
+		fontSize = fs;
 	}
 
-	public void copy() {
-		cuttedNode = tree.clone();
-		copyToClipboard();
+	public void setTextSmaller() {
+		fontSize *= 0.9;
+		updateView();
 	}
 
-	public void paste() {
-		if (tree.parent() != null && cuttedNode != null) {
-			appendNewBrother(cuttedNode);
-			cuttedNode = cuttedNode.clone();
-		}
-	}
-
-	public void setCurrentBackgroundColor(Color c) {
-		if (c != null) tree.setBGColor(c);
+	public void setTree(TreeNode root) {
+		tree = root;
+		organizerThread.go();		
 	}
 
 	public void showNodeDetails() {
@@ -395,12 +473,18 @@ import de.srsoftware.tools.translations.Translations;
 		this.requestFocus();
 	}
 
-	public void refreshView() {
-		if (tree.getNodeImage() != null) {
-			tree.getNodeImage().reload();
-			updateView();
-		}
+	public void startHtmlExport(String folder, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) throws IOException, DataFormatException, URISyntaxException {
+		exportedFiles = new TreeSet<String>();
+		TreeNode root = tree.getSuperRoot();
+		writeHtmlFile(root, folder, 1, onlyCurrent, maxDepth, interactive, singleFile, noMultipleFollow);
+		this.setTree(root.reload());
 	}
+	
+	public void stopOrganizing() {
+		organizerThread.die();		
+	}
+	
+	public abstract void toogleFold();
 
 	public boolean traceBGColor() {
 		if (backgroundTraceColor == null) {
@@ -420,41 +504,10 @@ import de.srsoftware.tools.translations.Translations;
 		return false;
 	}
 
-	public void deleteActiveImage() {
-		tree.setImage(null);
-	}
-
-	public void navigateToRoot() {
-		while (tree.parent() != null) setTreeTo(tree.parent());
-	}
-
-	public void setCurrentForegroundColor(Color c) {
-		if (c != null) tree.setForeColor(c);
-	}
-
-	public void setTextSmaller() {
-		fontSize *= 0.9;
-		updateView();
-	}
-
-	public void setTextLarger() {
-		fontSize *= 1.1;
-		updateView();
-	}
-
-	public float getTextSize() {
-		return fontSize;
-	}
-
-	public void setTextSize(float fs) {
-		fontSize = fs;
-	}
-
-	public void startHtmlExport(String folder, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) throws IOException, DataFormatException, URISyntaxException {
-		exportedFiles = new TreeSet<String>();
-		TreeNode root = tree.getSuperRoot();
-		writeHtmlFile(root, folder, 1, onlyCurrent, maxDepth, interactive, singleFile, noMultipleFollow);
-		this.setTree(root.reload());
+	public void updateView() {
+		updatedSinceLastChange = false;
+		organizerThread.go();
+		repaint();
 	}
 
 	public String writeHtmlFile(TreeNode root, String folder, int depth, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) throws IOException {
@@ -470,6 +523,15 @@ import de.srsoftware.tools.translations.Translations;
 			closeHtmlFile(htmlFile);
 		}
 		return filename;
+	}
+	
+	private void closeHtmlFile(BufferedWriter htmlFile) throws IOException {
+		htmlFile.write("</html>");
+		htmlFile.close();
+	}
+
+	private void copyToClipboard() {
+		copyToClipboard(tree);
 	}
 
 	private void exportNodeToHtml(TreeNode node, BufferedWriter htmlFile, String folder, int depth, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) throws IOException {
@@ -519,93 +581,33 @@ import de.srsoftware.tools.translations.Translations;
 		}
 	}
 
+	private void init() {
+		actionListeners = new Vector<ActionListener>();
+		this.setBackground(new Color(0, 155, 255));
+		addMouseWheelListener(this);
+		URL myurl = this.getClass().getResource("/intelliMind.gif");
+		backgroundImage = this.getToolkit().getImage(myurl);
+	}
+
+	private TreeNode pollFirst(TreeSet<TreeNode> ts) {
+		TreeNode result = ts.first();
+		ts.remove(result);
+		return result;
+	}
+
+	private void sheduleNavigation(int direction) {
+		(new NavigationThread(direction)).start();
+		
+	}
+
 	private void writeHtmlHeader(BufferedWriter htmlFile) throws IOException {
 		htmlFile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 		htmlFile.write("<html>\n<head>\n<title>" + tree.getText() + "</title>\n</head>\n");
 	}
 
-	private void closeHtmlFile(BufferedWriter htmlFile) throws IOException {
-		htmlFile.write("</html>");
-		htmlFile.close();
-	}
-
-	public void saveRoot() {
-		questForFileToSaveTree(tree.getSuperRoot());
-	}
-
-	public void setLinkOfCurrentNode(URL link) {
-		tree.setLink(link);
-	}
-
-	public void deleteActiveLink() {
-		tree.setLink(null);
-	}
-	
-	public void setBackground(Color bg){
-		super.setBackground(bg);
-		connectionColor = Tools.colorComplement(bg);
-	}
-	
-	public void setBounds(int x, int y, int width, int height) {
-		super.setBounds(x, y, width, height);
-		distance = (int) (width / distanceRatio);
-		updateView();
-	}
-
-	public void setBounds(Rectangle r) {
-		setBounds(r.x, r.y, r.width, r.height);
-	}
-
-	public void setSize(int width, int height) {
-		super.setSize(width, height);
-		distance = (int) (width / distanceRatio);
-		updateView();
-	}
-
-	public void setSize(Dimension d) {
-		setSize(d.width, d.height);
-	}
-
-	public void updateView() {
-		updatedSinceLastChange = false;
-		organizerThread.go();
-		repaint();
-	}
-	
-	public void mouseClicked(MouseEvent arg0) {}
-
-	public void mouseEntered(MouseEvent arg0) {}
-
-	public void mouseExited(MouseEvent arg0) {}
-
-	public void mousePressed(MouseEvent arg0) {
-		// Bestimmen des geklcikten Knotens
-		TreeNode clickedNode = getNodeAt(arg0.getPoint());
-		// bei Doppelklick: Aktion auslösen
-		if (arg0.getClickCount() > 1) {
-			if (tree.getLink() != null)
-				// Ausführen, falls Verknüpfung
-				Tools.execute(tree.getLink());
-			else
-				// Bearbeiten, falls normaler Knoten
-				editTree(clickedNode);
-		} else {
-			if (arg0.getButton() == MouseEvent.BUTTON2) {
-				// Knoten-Text in Zwischenablage kopieren
-				copyToClipboard(clickedNode);
-			} else {
-				// zu Knoten wechseln oder Bild vergrößern
-				if (tree != null) {
-					if (tree == clickedNode)
-						// wenn geklickter Knoten schon im Zentrum ist: Bild ggf. vergrößern
-						showNodeImage();
-					else {
-						// wenn geklickter Knoten in der Peripherie: zentrieren
-						setTreeTo(clickedNode);
-					}
-				}
-			}
-		}
+	protected void copyToClipboard(TreeNode node) {
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		clipboard.setContents(new StringSelection(node.getText() + '\n'), null);
 	}
 
 	protected TreeNode getNodeAt(Point point) {
@@ -670,10 +672,21 @@ import de.srsoftware.tools.translations.Translations;
 		return clickedNode;
 	}
 
-	public void mouseReleased(MouseEvent arg0) {}
+	protected void propagateCurrentFile() {
+		//System.out.println("propagateCurrentFile");
+		URL path = tree.getRoot().nodeFile();
+		
+		if (path != null) {
+			String title = path.toString();
+			if (tree.hasUnsavedChanges()) title += " (*)";
+			//System.out.println("set title to "+title);
+			sendActionEvent(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "SetTitle:" + title));
+		}
+	}
 
-	public void stopOrganizing() {
-		organizerThread.die();		
+	protected void sendActionEvent(ActionEvent actionEvent) {
+		for (ActionListener a : actionListeners)
+			a.actionPerformed(actionEvent);
 	}
 
 	protected void setParametersFrom(TreePanel treePanel) {
@@ -682,34 +695,21 @@ import de.srsoftware.tools.translations.Translations;
 		this.setBackground(treePanel.getBackground());
 	}
 
-	public void mouseWheelMoved(MouseWheelEvent arg0) {
-		if (arg0.getWheelRotation()==-1){
-			this.setTextLarger();
-			distance*=1.1;
-		} else
-		if (arg0.getWheelRotation()==1){
-			this.setTextSmaller();
-			distance*=0.9;
+	protected void setTreeTo(TreeNode newNode) {
+		//System.out.println("setTreeTo("+newNode.getText()+")");
+		if (newNode == null) return; // falls kein Knoten zum zentrieren übergeben wurde: abbrechen
+		if (backgroundTraceColor != null) newNode.setBGColor(backgroundTraceColor); // falls die Hintergrundfarbe verschleppt wird: Hintergrundfarbe zum Ziel-Knoten übertragen
+		if (foregroundTraceColor != null) newNode.setForeColor(foregroundTraceColor); // falls die Vordergrundfarbe verschleppt wird: Vordergrundfarbe zum Ziel-Knoten übertragen
+		tree.shrinkImages();// falls Bild des alten Zentrums groß war: verkleinern
+		tree = newNode; // neuen Knoten zentrieren
+		propagateCurrentFile(); // die frohe Nachricht vom neuen Knoten verbreiten
+		updateView(); // Ansicht aktualisieren
+	}
+
+	protected void showNodeImage() {
+		if (tree.getNodeImage() != null) {
+			tree.changeImageShrinkOption();
+			updateView();
 		}
 	}
-
-	public void decreaseDistance() {
-		distance -= 10;
-		updateView();
-	}
-
-	public void increaseDistance() {
-		distance += 10;
-		updateView();
-	}
-
-	public int getDistance() {
-		return distance;
-	}
-
-	public void setDistance(int d) {
-		distance = d;
-	}
-
-	public abstract void toogleFold();
 }
