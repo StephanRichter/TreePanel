@@ -283,7 +283,7 @@ public class TreeNode {
 			i++;
 		}
 		
-		return _("Knoten in Datei:\n#\n\nText:\n#\n\nBild:\n#\n\nLink:\n#\n\nTextfarbe: #\nHintergrundfarbe: #",new Object[]{Tools.shorten(getRoot().nodeFile.toString()),Tools.shorten(getText()),nodeImage,link,foregroundColor,backgroundColor});
+		return _("Node in File:\n#\n\nText:\n#\n\nImage:\n#\n\nLink:\n#\n\nText color: #\nBackground color: #",new Object[]{Tools.shorten(getRoot().nodeFile.toString()),Tools.shorten(getText()),nodeImage,link,foregroundColor,backgroundColor});
 
 	}
 
