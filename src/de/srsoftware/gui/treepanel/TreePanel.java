@@ -2,6 +2,7 @@ package de.srsoftware.gui.treepanel;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.LayoutManager;
@@ -28,27 +29,31 @@ import java.util.TreeSet;
 import java.util.Vector;
 import java.util.zip.DataFormatException;
 
+import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import de.srsoftware.formula.FormulaInputDialog;
 import de.srsoftware.tools.GenericFileFilter;
 import de.srsoftware.tools.Tools;
+import de.srsoftware.tools.VerticalPanel;
 import de.srsoftware.tools.translations.Translations;
 
 /**
  * @author Stephan Richter
  * 
  */
-	public abstract class TreePanel extends JPanel implements MouseListener, MouseWheelListener {
-	private class NavigationThread extends Thread{
+public abstract class TreePanel extends JPanel implements MouseListener, MouseWheelListener {
+	private class NavigationThread extends Thread {
 		private int direction;
+
 		public NavigationThread(int direction) {
-			this.direction=direction;
+			this.direction = direction;
 		}
-		
+
 		@Override
-		public void run() {			
+		public void run() {
 			super.run();
 			try {
 				sleep(100);
@@ -58,13 +63,13 @@ import de.srsoftware.tools.translations.Translations;
 					break;
 
 				case UP:
-						navigateUp();
-						break;
+					navigateUp();
+					break;
 				}
-			} catch (InterruptedException e) {
-			}
+			} catch (InterruptedException e) {}
 		}
 	}
+
 	private static final long serialVersionUID = -9127677905556355410L;
 	private static final int UP = 1;
 	private static final int DOWN = -1;
@@ -78,21 +83,26 @@ import de.srsoftware.tools.translations.Translations;
 	public TreeNode tree; // der Baum, das vom Panel dargestellt wird
 	protected Color connectionColor;
 	protected static TreeNode cuttedNode = null;
-	public static String _(String text) { 
+
+	public static String _(String text) {
 		return Translations.get(text);
 	}
+
 	public static String _(String key, Object insert) {
 		return Translations.get(key, insert);
 	}
+
 	protected TreeThread organizerThread; // Thread, der in regelmäßigen Abständen das Layout aktualisiert
 
 	protected boolean updatedSinceLastChange = false;
 	protected int fileLoadLevelLimit = 2; // maximale Tiefe von aktuellem Knoten ausgehend, bei der verlinkte Bäume geladen werden
 
 	private Image backgroundImage;
+	private JLabel label;
+	private JDialog infoDialog;
 
 	public TreePanel() {
-		super();		
+		super();
 		init();
 		organizerThread = new TreeThread();
 		organizerThread.setTreeMapper(this);
@@ -109,12 +119,12 @@ import de.srsoftware.tools.translations.Translations;
 		super(arg0);
 		init();
 	}
-	
+
 	public TreePanel(LayoutManager arg0, boolean arg1) {
 		super(arg0, arg1);
 		init();
 	}
-	
+
 	public void addActionListener(ActionListener actionListener) {
 		actionListeners.add(actionListener);
 	}
@@ -123,8 +133,8 @@ import de.srsoftware.tools.translations.Translations;
 		tree.addBrother(createNewNode);
 		setTreeTo(createNewNode);
 	}
-	
-  public void appendNewChild(TreeNode newChild) {
+
+	public void appendNewChild(TreeNode newChild) {
 		if (newChild != null) {
 			customizeNode(tree);
 			tree.addChild(newChild);
@@ -132,9 +142,9 @@ import de.srsoftware.tools.translations.Translations;
 			updateView();
 		}
 	}
-  
-  public Point center(){
-		return new Point(getWidth()/2,getHeight()/2);
+
+	public Point center() {
+		return new Point(getWidth() / 2, getHeight() / 2);
 	}
 
 	public void copy() {
@@ -146,13 +156,13 @@ import de.srsoftware.tools.translations.Translations;
 		return tree;
 	}
 
-	public void customizeNode(TreeNode node){
-		String text=node.getFormulaCode();
-		System.out.println("customizeNode("+text+")");
-		if (text.endsWith(".imf")||text.endsWith("{.imf}"))	{
-			text=text.replace("}\\small{", "").replace("\\small{", "").replace("}\\bold{","");
-			text=text.substring(text.lastIndexOf('/')+1);
-			text=text.substring(0,text.lastIndexOf('.'));
+	public void customizeNode(TreeNode node) {
+		String text = node.getFormulaCode();
+		System.out.println("customizeNode(" + text + ")");
+		if (text.endsWith(".imf") || text.endsWith("{.imf}")) {
+			text = text.replace("}\\small{", "").replace("\\small{", "").replace("}\\bold{", "");
+			text = text.substring(text.lastIndexOf('/') + 1);
+			text = text.substring(0, text.lastIndexOf('.'));
 			node.setText(text);
 		}
 	}
@@ -173,7 +183,7 @@ import de.srsoftware.tools.translations.Translations;
 			}
 		}
 	}
-	
+
 	public void decreaseDistance() {
 		distance -= 10;
 		updateView();
@@ -204,7 +214,7 @@ import de.srsoftware.tools.translations.Translations;
 	}
 
 	public void editTree(TreeNode node) {
-		String oldText=node.getFormulaCode();
+		String oldText = node.getFormulaCode();
 		customizeNode(node);
 		String newText = FormulaInputDialog.readInput(null, _("Change text of current mindmap node"), node.getFormulaCode());
 		if ((newText != null) && !newText.equals(oldText)) {
@@ -221,7 +231,6 @@ import de.srsoftware.tools.translations.Translations;
 		return distance;
 	}
 
-
 	public float getTextSize() {
 		return fontSize;
 	}
@@ -229,15 +238,13 @@ import de.srsoftware.tools.translations.Translations;
 	public boolean hasUnsavedNodes() {
 		return TreeNode.existUnsavedNodes();
 	}
-	
+
 	public void increaseDistance() {
 		distance += 10;
 		updateView();
 	}
 
 	public void mouseClicked(MouseEvent arg0) {}
-	
-
 
 	public void mouseEntered(MouseEvent arg0) {}
 
@@ -249,11 +256,11 @@ import de.srsoftware.tools.translations.Translations;
 		// bei Doppelklick: Aktion auslösen
 		if (arg0.getClickCount() > 1) {
 			if (tree.getLink() != null)
-				// Ausführen, falls Verknüpfung
-				Tools.execute(tree.getLink());
+			// Ausführen, falls Verknüpfung
+			Tools.execute(tree.getLink());
 			else
-				// Bearbeiten, falls normaler Knoten
-				editTree(clickedNode);
+			// Bearbeiten, falls normaler Knoten
+			editTree(clickedNode);
 		} else {
 			if (arg0.getButton() == MouseEvent.BUTTON2) {
 				// Knoten-Text in Zwischenablage kopieren
@@ -262,8 +269,8 @@ import de.srsoftware.tools.translations.Translations;
 				// zu Knoten wechseln oder Bild vergrößern
 				if (tree != null) {
 					if (tree == clickedNode)
-						// wenn geklickter Knoten schon im Zentrum ist: Bild ggf. vergrößern
-						showNodeImage();
+					// wenn geklickter Knoten schon im Zentrum ist: Bild ggf. vergrößern
+					showNodeImage();
 					else {
 						// wenn geklickter Knoten in der Peripherie: zentrieren
 						setTreeTo(clickedNode);
@@ -276,26 +283,24 @@ import de.srsoftware.tools.translations.Translations;
 	public void mouseReleased(MouseEvent arg0) {}
 
 	public void mouseWheelMoved(MouseWheelEvent arg0) {
-		if (arg0.getWheelRotation()==-1){
+		if (arg0.getWheelRotation() == -1) {
 			this.setTextLarger();
-			distance*=1.1;
-		} else
-		if (arg0.getWheelRotation()==1){
+			distance *= 1.1;
+		} else if (arg0.getWheelRotation() == 1) {
 			this.setTextSmaller();
-			distance*=0.9;
+			distance *= 0.9;
 		}
 	}
 
 	public void navigateDown() {
-		if (tree.next() != null)
-			setTreeTo(tree.next());
-		else {			
-			TreeNode dummy=tree.parent();
-			if (dummy!=null) {
+		if (tree.next() != null) setTreeTo(tree.next());
+		else {
+			TreeNode dummy = tree.parent();
+			if (dummy != null) {
 				setTreeTo(dummy);
-			  sheduleNavigation(DOWN);
-	  	}
-  	}
+				sheduleNavigation(DOWN);
+			}
+		}
 	}
 
 	public void navigateLeft() {
@@ -303,10 +308,10 @@ import de.srsoftware.tools.translations.Translations;
 	}
 
 	public void navigateRight() {
-		//System.out.println("navigateRight");
+		// System.out.println("navigateRight");
 		if (tree.getLink() != null) Tools.execute(tree.getLink());
 		if (tree.firstChild() != null) setTreeTo(tree.firstChild());
-		}
+	}
 
 	public void navigateToEnd() {
 		if (tree.firstChild() != null) {
@@ -318,27 +323,26 @@ import de.srsoftware.tools.translations.Translations;
 	}
 
 	public void navigateToRoot() {
-		while (tree.parent() != null) setTreeTo(tree.parent());
+		while (tree.parent() != null)
+			setTreeTo(tree.parent());
 	}
 
 	public void navigateUp() {
-		if (tree.prev() != null)
-			setTreeTo(tree.prev());
+		if (tree.prev() != null) setTreeTo(tree.prev());
 		else {
-			TreeNode dummy=tree.parent();
-			if (dummy!=null) {
+			TreeNode dummy = tree.parent();
+			if (dummy != null) {
 				setTreeTo(dummy);
-			sheduleNavigation(UP);
+				sheduleNavigation(UP);
 			}
-			
 
 		}
 	}
 
-	public void paint(Graphics g){
-    super.paint(g);
-    if (tree==null && backgroundImage!=null) g.drawImage(backgroundImage,(this.getWidth()-backgroundImage.getWidth(this))/2,(this.getHeight()-backgroundImage.getHeight(this))/2,this);
-  }
+	public void paint(Graphics g) {
+		super.paint(g);
+		if (tree == null && backgroundImage != null) g.drawImage(backgroundImage, (this.getWidth() - backgroundImage.getWidth(this)) / 2, (this.getHeight() - backgroundImage.getHeight(this)) / 2, this);
+	}
 
 	public void paste() {
 		if (tree.parent() != null && cuttedNode != null) {
@@ -354,8 +358,7 @@ import de.srsoftware.tools.translations.Translations;
 	public void questForFileToSaveTree(TreeNode node) {
 		String guessedName = Tools.deleteNonFilenameChars(node.getText() + ".imf");
 		String choosenFilename = Tools.saveDialog(this, _("save as"), guessedName, new GenericFileFilter(_("mindmap file"), "*.imf"));
-		if (choosenFilename == null)
-			node.treeChanged();
+		if (choosenFilename == null) node.treeChanged();
 		else {
 			if (!choosenFilename.toUpperCase().endsWith(".IMF") && !choosenFilename.toUpperCase().endsWith(".MM")) {
 				choosenFilename += ".imf";
@@ -364,13 +367,12 @@ import de.srsoftware.tools.translations.Translations;
 				try {
 					URL u = new URL("file://" + choosenFilename);
 					System.out.println(u);
-					if (!node.saveTo(u))
-						JOptionPane.showMessageDialog(null, _("Sorry, I was not able to save the file as \"#\"!", choosenFilename), _("Error while trying to save"), JOptionPane.OK_OPTION);
+					if (!node.saveTo(u)) JOptionPane.showMessageDialog(null, _("Sorry, I was not able to save the file as \"#\"!", choosenFilename), _("Error while trying to save"), JOptionPane.OK_OPTION);
 					else {
 						sendActionEvent(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "SetTitle:" + node.getRoot().nodeFile()));
 					}
 				} catch (MalformedURLException e) {
-					System.out.println(_("Sorry, I was not able to build an URL from \"#\"!",choosenFilename));
+					System.out.println(_("Sorry, I was not able to build an URL from \"#\"!", choosenFilename));
 					node.treeChanged();
 				}
 			}
@@ -400,14 +402,14 @@ import de.srsoftware.tools.translations.Translations;
 		questForFileToSaveTree(tree.getSuperRoot());
 	}
 
-	public void setBackground(Color bg){
+	public void setBackground(Color bg) {
 		super.setBackground(bg);
 		connectionColor = Tools.colorComplement(bg);
 	}
 
-	public void setBackgroundImage(Image image){
-  	backgroundImage=image;
-  }
+	public void setBackgroundImage(Image image) {
+		backgroundImage = image;
+	}
 
 	public void setBounds(int x, int y, int width, int height) {
 		super.setBounds(x, y, width, height);
@@ -465,25 +467,76 @@ import de.srsoftware.tools.translations.Translations;
 
 	public void setTree(TreeNode root) {
 		tree = root;
-		organizerThread.go();		
+		organizerThread.go();
 	}
 
 	public void showNodeDetails() {
 		JOptionPane.showMessageDialog(this, tree.getFullInfo(), _("Information"), JOptionPane.INFORMATION_MESSAGE);
 		this.requestFocus();
 	}
+	
+	private class ExportThread extends Thread{
+
+		private String folder;
+		private boolean onlyCurrent;
+		private int maxDepth;
+		private boolean interactive;
+		private boolean singleFile;
+		private boolean noMultiFollow;
+
+		public ExportThread(String folder, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) {
+			this.folder=folder;
+			this.onlyCurrent=onlyCurrent;
+			this.maxDepth=maxDepth;
+			this.interactive=interactive;
+			this.singleFile=singleFile;
+			this.noMultiFollow=noMultipleFollow;
+		}
+
+		@Override
+		public void run() {
+			TreeNode root = tree.getSuperRoot();
+			try {
+				sleep(2000);
+	      writeHtmlFile(root, folder, 1, onlyCurrent, maxDepth, interactive, singleFile, noMultiFollow);
+				infoDialog.setVisible(false);
+				setTree(root.reload());
+      } catch (IOException e) {
+	      e.printStackTrace();
+      } catch (DataFormatException e) {
+	      // TODO Auto-generated catch block
+	      e.printStackTrace();
+      } catch (URISyntaxException e) {
+	      // TODO Auto-generated catch block
+	      e.printStackTrace();
+      } catch (InterruptedException e) {
+	      // TODO Auto-generated catch block
+	      e.printStackTrace();
+      }
+		}
+	}
+
 
 	public void startHtmlExport(String folder, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) throws IOException, DataFormatException, URISyntaxException {
 		exportedFiles = new TreeSet<String>();
-		TreeNode root = tree.getSuperRoot();
-		writeHtmlFile(root, folder, 1, onlyCurrent, maxDepth, interactive, singleFile, noMultipleFollow);
-		this.setTree(root.reload());
+
+		ExportThread exportThread = new ExportThread(folder,onlyCurrent,maxDepth,interactive,singleFile,noMultipleFollow);
+		exportThread.start();
+	  infoDialog = new JDialog((Frame)null,_("exporting mindmaps"));
+	  VerticalPanel vp = new VerticalPanel();
+	  vp.add(label=new JLabel(_("Starting to export your selected mindmap in two seconds...                 ")));
+	  vp.skalieren();
+	  infoDialog.getContentPane().add(vp);
+	  infoDialog.pack();
+	  infoDialog.setModal(false);
+	  infoDialog.setVisible(true);	
+	  
 	}
 	
 	public void stopOrganizing() {
-		organizerThread.die();		
+		organizerThread.die();
 	}
-	
+
 	public abstract void toogleFold();
 
 	public boolean traceBGColor() {
@@ -511,20 +564,24 @@ import de.srsoftware.tools.translations.Translations;
 	}
 
 	public String writeHtmlFile(TreeNode root, String folder, int depth, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) throws IOException {
-		String filename = root.nodeFile().getFile();
-		filename = folder + filename.substring(filename.lastIndexOf("/") + 1) + ".html";
-		if ((maxDepth == 0 || depth < maxDepth) && !exportedFiles.contains(filename)) {
-			exportedFiles.add(filename);
-			BufferedWriter htmlFile = new BufferedWriter(new FileWriter(filename));
+		String path = root.nodeFile().getFile();
+		String filename = path.substring(path.lastIndexOf("/") + 1) + ".html";
+		path = folder + filename;
+		if ((maxDepth == 0 || depth < maxDepth) && !exportedFiles.contains(path)) {
+			exportedFiles.add(path);
+			BufferedWriter htmlFile = new BufferedWriter(new FileWriter(path));
 			writeHtmlHeader(htmlFile);
 			htmlFile.write("<body>\n");
 			exportNodeToHtml(root, htmlFile, folder, depth, onlyCurrent, maxDepth, interactive, singleFile, noMultipleFollow);
 			htmlFile.write("</body>\n");
 			closeHtmlFile(htmlFile);
 		}
-		return filename;
+		if (label!=null && filename!=null){
+			label.setText(filename);
+		}
+		return path;
 	}
-	
+
 	private void closeHtmlFile(BufferedWriter htmlFile) throws IOException {
 		htmlFile.write("</html>");
 		htmlFile.close();
@@ -547,22 +604,18 @@ import de.srsoftware.tools.translations.Translations;
 					if (onlyCurrent) {
 						htmlFile.write(child.getText());
 					} else {
-						boolean include=depth<maxDepth;
-						if (interactive){
+						boolean include = depth < maxDepth;
+						if (interactive) {
 							System.out.println(_("Warning: interactive export not supported, yet."));
 							// include = Abfrage
 						}
 						if (include) {
 							try {
 								child.loadFromFile();
-							} catch (FileNotFoundException fnfe){								
-							} catch (NullPointerException npwe){								
-							} catch (DataFormatException e) {
-							} catch (URISyntaxException e) {
-							}
+							} catch (FileNotFoundException fnfe) {} catch (NullPointerException npwe) {} catch (DataFormatException e) {} catch (URISyntaxException e) {}
 						}
 						if (singleFile) {
-							exportNodeToHtml(child, htmlFile, folder, depth+1, onlyCurrent, maxDepth, interactive, singleFile, noMultipleFollow);
+							exportNodeToHtml(child, htmlFile, folder, depth + 1, onlyCurrent, maxDepth, interactive, singleFile, noMultipleFollow);
 						} else {
 							if (child.hasBeenLoadedFromFile()) {
 								String lnk = writeHtmlFile(child, folder, depth + 1, onlyCurrent, maxDepth, interactive, singleFile, noMultipleFollow);
@@ -584,7 +637,7 @@ import de.srsoftware.tools.translations.Translations;
 	private void init() {
 		actionListeners = new Vector<ActionListener>();
 		this.setBackground(new Color(0, 155, 255));
-		addMouseWheelListener(this);		
+		addMouseWheelListener(this);
 		backgroundImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/de/srsoftware/intellimind/intelliMind.gif"));
 	}
 
@@ -596,7 +649,7 @@ import de.srsoftware.tools.translations.Translations;
 
 	private void sheduleNavigation(int direction) {
 		(new NavigationThread(direction)).start();
-		
+
 	}
 
 	private void writeHtmlHeader(BufferedWriter htmlFile) throws IOException {
@@ -672,13 +725,13 @@ import de.srsoftware.tools.translations.Translations;
 	}
 
 	protected void propagateCurrentFile() {
-		//System.out.println("propagateCurrentFile");
+		// System.out.println("propagateCurrentFile");
 		URL path = tree.getRoot().nodeFile();
-		
+
 		if (path != null) {
 			String title = path.toString();
 			if (tree.hasUnsavedChanges()) title += " (*)";
-			//System.out.println("set title to "+title);
+			// System.out.println("set title to "+title);
 			sendActionEvent(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "SetTitle:" + title));
 		}
 	}
@@ -689,13 +742,13 @@ import de.srsoftware.tools.translations.Translations;
 	}
 
 	protected void setParametersFrom(TreePanel treePanel) {
-		tree=treePanel.currentNode();
-		connectionColor=treePanel.connectionColor;
+		tree = treePanel.currentNode();
+		connectionColor = treePanel.connectionColor;
 		this.setBackground(treePanel.getBackground());
 	}
 
 	protected void setTreeTo(TreeNode newNode) {
-		//System.out.println("setTreeTo("+newNode.getText()+")");
+		// System.out.println("setTreeTo("+newNode.getText()+")");
 		if (newNode == null) return; // falls kein Knoten zum zentrieren übergeben wurde: abbrechen
 		if (backgroundTraceColor != null) newNode.setBGColor(backgroundTraceColor); // falls die Hintergrundfarbe verschleppt wird: Hintergrundfarbe zum Ziel-Knoten übertragen
 		if (foregroundTraceColor != null) newNode.setForeColor(foregroundTraceColor); // falls die Vordergrundfarbe verschleppt wird: Vordergrundfarbe zum Ziel-Knoten übertragen
