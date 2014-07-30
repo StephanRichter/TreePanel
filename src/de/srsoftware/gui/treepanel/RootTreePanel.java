@@ -34,7 +34,6 @@ public class RootTreePanel extends TreePanel {
 	public void paint(Graphics g) {
 		super.paint(g);
 		if (tree != null) {
-			g.setFont(g.getFont().deriveFont(fontSize));
 			boolean wasFolded=tree.isFolded();
 			tree.setFolded(false);
 			if (tree.nodeFile() != null) {
@@ -51,7 +50,7 @@ public class RootTreePanel extends TreePanel {
 				}
 			}
 			TreeNode child;
-			Dimension d=tree.nodeDimension(g, this);
+			Dimension d=tree.nodeDimension(g, this,fontSize);
 			Point center=new Point((getWidth()-d.width)/3,getHeight()/2);
 			tree.moveTowards(center);
 			if (wasFolded){
@@ -64,7 +63,7 @@ public class RootTreePanel extends TreePanel {
 			if (!updatedSinceLastChange) tree.resetDimension();
 			Point leftCenter=tree.getOrigin();
 			leftCenter.y+=d.height/2;
-			d.height=paint((Graphics2D)g,tree,true).height;
+			d.height=paint((Graphics2D)g,tree,fontSize, true).height;
 			paintFamily((Graphics2D) g,tree,leftCenter,d);
 		}
 	}
@@ -96,17 +95,17 @@ public class RootTreePanel extends TreePanel {
 		g.setStroke(str);
 	}
 
-	private Dimension paint(Graphics2D g, TreeNode mindmap, boolean draw) {
+	private Dimension paint(Graphics2D g, TreeNode mindmap,float fontSize, boolean draw) {
 		if (!this.contains(mindmap.getOrigin())){
 			mindmap.setFolded(true);
 			return new Dimension(0,0);
 		}
 		if (!updatedSinceLastChange) mindmap.resetDimension();
-		Dimension ownDim = mindmap.nodeDimension(g, this);
-		if (draw) mindmap.paint(g, this); 
-		g.setFont(g.getFont().deriveFont(fontSize*0.8f));
+		Dimension ownDim = mindmap.nodeDimension(g, this,fontSize);
+		if (draw) mindmap.paint(g, this,fontSize); 
+		fontSize*=0.8;
 
-		Dimension childDim = mindmap.isFolded()?new Dimension(0,0):paintChildren(g, null, mindmap, false);
+		Dimension childDim = mindmap.isFolded()?new Dimension(0,0):paintChildren(g, null, mindmap, fontSize, false);
 		Dimension result = new Dimension(ownDim.width + childDim.width + distance, Math.max(ownDim.height, childDim.height));
 		if (draw) {
 			Point leftCenter = mindmap.getOrigin();
@@ -118,17 +117,17 @@ public class RootTreePanel extends TreePanel {
 				g.setStroke(new BasicStroke(g.getFont().getSize()/5));
 				g.drawOval(leftCenter.x, leftCenter.y-dist/2, 7, 7);
 				g.setStroke(str);
-			} else paintChildren(g, leftCenter, mindmap, true);
+			} else paintChildren(g, leftCenter, mindmap, fontSize,true);
 		}
 		return result;
 	}
 
-	private Dimension paintChildren(Graphics2D g, Point leftCenter, TreeNode mindmap, boolean draw) {
+	private Dimension paintChildren(Graphics2D g, Point leftCenter, TreeNode mindmap, float fontSize, boolean draw) {
 		int width = 0;
 		int height = dist;
 		TreeNode child = mindmap.firstChild();
 		while (child != null) {
-			Dimension d = paint(g,child, false);
+			Dimension d = paint(g,child, fontSize,false);
 			height += d.height+dist;
 			width = Math.max(width, d.width);
 			child = child.next();
@@ -140,12 +139,12 @@ public class RootTreePanel extends TreePanel {
 			currentOrigin.x+=distance;
 			child = mindmap.firstChild();
 			while (child != null) {
-				Dimension d=paint(g,child,false);
-				Dimension d2=child.nodeDimension(g, this);
+				Dimension d=paint(g,child,fontSize,false);
+				Dimension d2=child.nodeDimension(g, this,fontSize);
 				Point target=new Point(currentOrigin);
 				target.y+=(d.height-d2.height)/2;
 				child.moveTowards(target);
-				paint(g,child, true);
+				paint(g,child,fontSize, true);
 				currentOrigin.y+=d.height+dist;
 				Point p=child.getOrigin();
 				p.y+=d2.height/2;
@@ -164,7 +163,7 @@ public class RootTreePanel extends TreePanel {
 			int x=leftCenter.x;
 			int y=leftCenter.y;
 			mindmap.resetDimension();
-			Dimension mindmapDim = mindmap.nodeDimension(g, this);
+			Dimension mindmapDim = mindmap.nodeDimension(g, this,fontSize);
 			Point p=mindmap.getOrigin();
 			p.y+=mindmapDim.height/2;
 			points.add(p);
@@ -173,12 +172,12 @@ public class RootTreePanel extends TreePanel {
 			int height=mindmapDimension.height;
 			y+=(mindmapDimension.height)/2+dist;
 			while ((sibling=sibling.next())!=null){
-				Dimension siblingDim=sibling.nodeDimension(g, this);
+				Dimension siblingDim=sibling.nodeDimension(g, this,fontSize);
 				sibling.moveTowards(x, y);
 				p=sibling.getOrigin();
 				p.y+=siblingDim.height/2;
 				points.add(p);
-				sibling.paint(g, this);
+				sibling.paint(g, this,fontSize);
 				if (sibling.firstChild()!=null){ 
 					Stroke str = g.getStroke();
 					g.setStroke(new BasicStroke(g.getFont().getSize()/5));
@@ -193,14 +192,14 @@ public class RootTreePanel extends TreePanel {
 			y=leftCenter.y-(mindmapDimension.height)/2;
 			
 			while ((sibling=sibling.prev())!=null){
-				Dimension siblingDim=sibling.nodeDimension(g, this);
+				Dimension siblingDim=sibling.nodeDimension(g, this,fontSize);
 				height+=siblingDim.height+dist;
 				y-=siblingDim.height+dist;
 				sibling.moveTowards(x, y);
 				p=sibling.getOrigin();
 				p.y+=siblingDim.height/2;
 				points.add(p);
-				sibling.paint(g, this);
+				sibling.paint(g, this,fontSize);
 				
 				if (sibling.firstChild()!=null){ 
 					Stroke str = g.getStroke();
@@ -212,7 +211,7 @@ public class RootTreePanel extends TreePanel {
 			}			
 			mindmapDimension=new Dimension(10,height);
 			parent.resetDimension();
-			Dimension parentDimension=parent.nodeDimension(g, this);
+			Dimension parentDimension=parent.nodeDimension(g, this,fontSize);
 			leftCenter.y=y+height/2+parentDimension.height;
 			leftCenter.x-=parentDimension.width+distance;
 			parent.moveTowards(leftCenter);
@@ -220,7 +219,7 @@ public class RootTreePanel extends TreePanel {
 			p.x+=parentDimension.width;
 			p.y+=parentDimension.height/2;
 			for (Iterator<Point> it = points.iterator();it.hasNext();) drawConnection(g, p, it.next());
-			parent.paint(g, this);
+			parent.paint(g, this,fontSize);
 			paintFamily(g, parent, leftCenter, mindmapDimension);
 		}
 	}
