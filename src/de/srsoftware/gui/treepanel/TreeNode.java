@@ -22,6 +22,7 @@ import java.util.Vector;
 import java.util.zip.DataFormatException;
 
 import de.srsoftware.formula.Formula;
+import de.srsoftware.formula.FormulaFont;
 import de.srsoftware.tools.FileRecoder;
 import de.srsoftware.tools.Filefilter;
 import de.srsoftware.tools.ObjectComparator;
@@ -425,21 +426,21 @@ public class TreeNode {
 		return nextBrother;
 	}
 
-	public Dimension nodeDimension(Graphics g, ImageObserver obs, float fontSize) {
-		return paint(g, obs, fontSize, false);
+	public Dimension nodeDimension(Graphics g, ImageObserver obs, FormulaFont font) {
+		return paint(g, obs, font, false);
 	}
 
 	public URL nodeFile() {
 		return nodeFile;
 	}
 
-	public Dimension paint(Graphics g, ImageObserver obs, float fontSize) {
-		return paint(g, obs, fontSize, true);
+	public Dimension paint(Graphics g, ImageObserver obs, FormulaFont font) {
+		return paint(g, obs, font, true);
 	}
 
-	public Dimension paint(Graphics g, ImageObserver obs, float fontSize, boolean draw) {
+	public Dimension paint(Graphics g, ImageObserver obs, FormulaFont font, boolean draw) {
 		if (formula != null) {
-			Dimension formulaDimension = formula.getSize((int)fontSize);
+			Dimension formulaDimension = formula.getSize(font);
 			if (formulaDimension.width < 10 && nodeImage != null) formulaDimension.width = 300;
 			Dimension imageDimension = (nodeImage != null) ? ((shrinkLargeImages) ? nodeImage.getResizedDimension(formulaDimension.width, obs) : nodeImage.getDimension(obs)) : (new Dimension());
 			Dimension nodeDimension = new Dimension(Math.max(formulaDimension.width, imageDimension.width)+4, formulaDimension.height + imageDimension.height+4);
@@ -458,9 +459,9 @@ public class TreeNode {
 				g.drawRoundRect(upperLeft.x - 2, upperLeft.y - 2, nodeDimension.width, nodeDimension.height , 5, 5);
 				
 				if (formulaDimension.width > imageDimension.width) {
-					g.drawImage(formula.image((int)fontSize), upperLeft.x, upperLeft.y + imageDimension.height, obs);
+					g.drawImage(formula.image(font), upperLeft.x, upperLeft.y + imageDimension.height, obs);
 				} else {
-					g.drawImage(formula.image((int)fontSize), upperLeft.x + (imageDimension.width - formulaDimension.width) / 2, upperLeft.y + imageDimension.height, obs);
+					g.drawImage(formula.image(font), upperLeft.x + (imageDimension.width - formulaDimension.width) / 2, upperLeft.y + imageDimension.height, obs);
 				}
 				if (this.nodeImage != null) {
 					g.drawString("\u270D", upperLeft.x + 2, upperLeft.y + g.getFontMetrics().getHeight() + 2);
@@ -472,9 +473,9 @@ public class TreeNode {
 		return null;
 	}
 
-	public void paintWithoutImages(Graphics g, ImageObserver obs,float fontSize) {
+	public void paintWithoutImages(Graphics g, ImageObserver obs,FormulaFont font) {
 		if (formula != null) {
-			Dimension d = formula.getSize((int) fontSize);
+			Dimension d = formula.getSize(font);
 			Point upperLeft = (centered) ? new Point(origin.x - d.width / 2, origin.y - d.height / 2) : origin;
 			swapColor(g);
 			if (this.backgroundColor != null) g.setColor(this.backgroundColor);
@@ -482,7 +483,7 @@ public class TreeNode {
 			swapColor(g);
 			if (this.foregroundColor != null) g.setColor(this.foregroundColor);
 			g.drawRoundRect(upperLeft.x - 2, upperLeft.y - 2, d.width + 2, d.height + 2, 5, 5);
-			g.drawImage(formula.image((int) fontSize), upperLeft.x, upperLeft.y, obs);
+			g.drawImage(formula.image(font), upperLeft.x, upperLeft.y, obs);
 		}
 	}
 
