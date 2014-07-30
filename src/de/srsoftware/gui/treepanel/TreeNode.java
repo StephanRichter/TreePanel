@@ -439,7 +439,7 @@ public class TreeNode {
 
 	public Dimension paint(Graphics g, ImageObserver obs, boolean draw) {
 		if (formula != null) {
-			Dimension formulaDimension = formula.getSize(g);
+			Dimension formulaDimension = formula.getSize();
 			if (formulaDimension.width < 10 && nodeImage != null) formulaDimension.width = 300;
 			Dimension imageDimension = (nodeImage != null) ? ((shrinkLargeImages) ? nodeImage.getResizedDimension(formulaDimension.width, obs) : nodeImage.getDimension(obs)) : (new Dimension());
 			Dimension nodeDimension = new Dimension(Math.max(formulaDimension.width, imageDimension.width)+4, formulaDimension.height + imageDimension.height+4);
@@ -458,9 +458,9 @@ public class TreeNode {
 				g.drawRoundRect(upperLeft.x - 2, upperLeft.y - 2, nodeDimension.width, nodeDimension.height , 5, 5);
 				
 				if (formulaDimension.width > imageDimension.width) {
-					formula.draw(g, upperLeft.x, upperLeft.y + imageDimension.height);
+					g.drawImage(formula.image(), upperLeft.x, upperLeft.y + imageDimension.height, obs);
 				} else {
-					formula.draw(g, upperLeft.x + (imageDimension.width - formulaDimension.width) / 2, upperLeft.y + imageDimension.height);
+					g.drawImage(formula.image(), upperLeft.x + (imageDimension.width - formulaDimension.width) / 2, upperLeft.y + imageDimension.height, obs);
 				}
 				if (this.nodeImage != null) {
 					g.drawString("\u270D", upperLeft.x + 2, upperLeft.y + g.getFontMetrics().getHeight() + 2);
@@ -473,9 +473,8 @@ public class TreeNode {
 	}
 
 	public void paintWithoutImages(Graphics g, ImageObserver obs) {
-		// TODO Auto-generated method stub
 		if (formula != null) {
-			Dimension d = formula.getSize(g);
+			Dimension d = formula.getSize();
 			Point upperLeft = (centered) ? new Point(origin.x - d.width / 2, origin.y - d.height / 2) : origin;
 			swapColor(g);
 			if (this.backgroundColor != null) g.setColor(this.backgroundColor);
@@ -483,7 +482,7 @@ public class TreeNode {
 			swapColor(g);
 			if (this.foregroundColor != null) g.setColor(this.foregroundColor);
 			g.drawRoundRect(upperLeft.x - 2, upperLeft.y - 2, d.width + 2, d.height + 2, 5, 5);
-			formula.draw(g, upperLeft);
+			g.drawImage(formula.image(), upperLeft.x, upperLeft.y, obs);
 		}
 	}
 
@@ -529,7 +528,7 @@ public class TreeNode {
 	}
 
 	public void resetDimension() {
-		if (formula != null) formula.resetDimension();
+		// TODO: remove
 	}
 
 	public boolean saveTo(URL fileUrl) {
