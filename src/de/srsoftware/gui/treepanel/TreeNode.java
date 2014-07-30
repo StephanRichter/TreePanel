@@ -455,7 +455,10 @@ public class TreeNode {
 				if (this.backgroundColor != null) g.setColor(this.backgroundColor);
 				g.fillRoundRect(upperLeft.x - 2, upperLeft.y - 2, nodeDimension.width, nodeDimension.height , 5, 5);
 				swapColor(g);
-				if (this.foregroundColor != null) g.setColor(this.foregroundColor);
+				if (this.foregroundColor != null) {
+					g.setColor(this.foregroundColor);
+					font=font.color(foregroundColor);
+				}
 				g.drawRoundRect(upperLeft.x - 2, upperLeft.y - 2, nodeDimension.width, nodeDimension.height , 5, 5);
 				
 				if (formulaDimension.width > imageDimension.width) {
