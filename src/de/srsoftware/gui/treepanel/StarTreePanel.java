@@ -1,7 +1,6 @@
 package de.srsoftware.gui.treepanel;
 
 import java.awt.BasicStroke;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -9,6 +8,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.zip.DataFormatException;
+
+import de.srsoftware.formula.FormulaFont;
 
 public class StarTreePanel extends TreePanel {
 	private static final long serialVersionUID = -3898710876180470991L;
@@ -43,8 +44,7 @@ public class StarTreePanel extends TreePanel {
 
 	public void paint(Graphics g) {
 		super.paint(g);
-		g.setFont(g.getFont().deriveFont(fontSize));
-		paint((Graphics2D)g, tree, null, 0);
+		paint((Graphics2D)g, tree, null, 0,new FormulaFont(g.getFont()).withSize(fontSize));
 		updatedSinceLastChange = true;
 	}
 
@@ -140,15 +140,14 @@ public class StarTreePanel extends TreePanel {
 		node.moveTowards(origin);
 	}
 
-	private void paint(Graphics2D g, TreeNode node, TreeNode doNotTraceThis, int level) {
+	private void paint(Graphics2D g, TreeNode node, TreeNode doNotTraceThis, int level,FormulaFont font) {
 		if (node != null && level < levelLimit) {
-			Font oldFont = g.getFont();
-			float oldSize = oldFont.getSize();
 			if (doNotTraceThis != null) {
 				if (doNotTraceThis.parent() == node) {
-					g.setFont(oldFont.deriveFont(oldSize * 5 / 6));
-				} else
-					g.setFont(oldFont.deriveFont(oldSize / 2));
+					font=font.scale(5f/6f);
+				} else {
+					font=font.scale(0.5f);
+				}
 			}
 			Point origin = node.getOrigin();
 			/*
@@ -161,7 +160,7 @@ public class StarTreePanel extends TreePanel {
 					Point org = dummy.getOrigin();
 					g.setStroke(new BasicStroke(g.getFont().getSize()/4));
 					if (level < levelLimit - 1) drawConnection(g,origin.x, origin.y, org.x, org.y);
-					paint(g, dummy, node, level + 1);
+					paint(g, dummy, node, level + 1,font);
 				}
 				dummy = dummy.prev();
 			}
@@ -170,16 +169,15 @@ public class StarTreePanel extends TreePanel {
 				Point org = dummy.getOrigin();
 				g.setStroke(new BasicStroke(g.getFont().getSize()/3));
 				if (level < levelLimit - 1) drawConnection(g,origin.x, origin.y, org.x, org.y);
-				paint(g, dummy, node, level + 1);
+				paint(g, dummy, node, level + 1,font);
 			}
-			g.setFont(oldFont);
 			g.setColor(connectionColor);
 			g.setStroke(new BasicStroke(g.getFont().getSize()/7));
 			if (!updatedSinceLastChange) node.resetDimension();
 			if (level < 2)
-				node.paint(g, this);
+				node.paint(g, this,font);
 			else
-				node.paintWithoutImages(g, this);
+				node.paintWithoutImages(g, this,font);
 		}
 	}
 
