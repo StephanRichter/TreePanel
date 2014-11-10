@@ -366,7 +366,9 @@ public class TreeNode {
 	}
 
 	public void loadFromFile() throws FileNotFoundException, IOException, DataFormatException, URISyntaxException {	
-		if (this.nodeFile != null) this.loadFromFile(this.nodeFile);
+		if (this.nodeFile != null) {
+			loadFromFile(this.nodeFile);
+		}
 	}
 
 	public void loadFromFile(URL fileUrl) throws FileNotFoundException, IOException, DataFormatException, URISyntaxException {
@@ -382,8 +384,9 @@ public class TreeNode {
 			} else {
 				
 				fileUrl=resolveSymLinks(fileUrl);
-				
+
 				TreeNode n = nodeOpenAndChanged(fileUrl);
+
 				if (n != null) {
 					// TODO wenn ein Baum geöffnet wird, das schon offen, geändert und noch ncht gespeichert ist:
 					// dieses Baum in eine temporäre Datei schreiben, und diese öffnen
@@ -741,6 +744,7 @@ public class TreeNode {
 	private void loadFromIntellimindFile(URL fileUrl) throws FileNotFoundException, IOException {
 		fileUrl = Tools.fixUrl(fileUrl);
 		FileRecoder.recode(fileUrl);
+		
 		try {
 			BufferedReader fileReader = new BufferedReader(new InputStreamReader(fileUrl.openStream(), "UTF-8"));
 			int waitTime = 1;
@@ -754,7 +758,7 @@ public class TreeNode {
 			root.nodeFile = fileUrl;
 			TreeNode node = root;
 			String line;
-			while (fileReader.ready()) {
+			while (fileReader.ready()) {				
 				line = fileReader.readLine();
 				if (line.equals("[Root]")) {}
 				if (line.equals("[Child]")) {

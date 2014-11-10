@@ -39,7 +39,9 @@ public class RootTreePanel extends TreePanel {
 			tree.setFolded(false);
 			if (tree.nodeFile() != null) {
 				try {
-					tree.loadFromFile();
+					if (!tree.hasBeenLoadedFromFile()){
+						tree.loadFromFile();
+					}
 				} catch (FileNotFoundException e) {
 					System.out.println(_("File not found: ")+ e.getMessage());
 				} catch (IOException e) {
