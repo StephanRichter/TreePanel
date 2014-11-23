@@ -39,6 +39,7 @@ public class TreeNode {
 		changedNodes.clear();
 	}
 	public static TreeNode nodeOpenAndChanged(URL url) {
+		if (url==null) return null;
 		for (TreeNode n : changedNodes) {
 			URL u = n.nodeFile();
 			if ((u != null) && (url.equals(u)) && n.nodeFileHasBeenLoaded) return n;
@@ -50,6 +51,7 @@ public class TreeNode {
 		TreeSet<TreeNode> result = new TreeSet<TreeNode>(new ObjectComparator());
 		while (!changedNodes.isEmpty()) {
 			TreeNode dummy = pollFirst(changedNodes);
+			if (!dummy.canBeChanged) continue;
 			if (!dummy.save()) result.add(dummy);
 			if (nodeOpenAndChanged(dummy.nodeFile) != null) {
 				System.out.println(_("Warning! The File # has been concurrently edited at two or more places. Only changes of one instance will be saved to #!\nChanges of other instances will be saved to backup files in the same folder!", new Object[]{dummy.nodeFile,dummy.nodeFile}));
@@ -141,6 +143,7 @@ public class TreeNode {
 	private boolean shrinkLargeImages = true;
 
 	private int maxBackupNumber = 10;
+	private boolean canBeChanged = true;
 
 	/**
 	 * create a new node with empty formula
@@ -616,12 +619,13 @@ public class TreeNode {
 	}
 
 	public void treeChanged() {
+		if (!this.canBeChanged) return; 
 		TreeNode dummy = this;
 		while (dummy != null && dummy.nodeFile == null) { // sucht nach der Wurzel des aktuellen Teilbaums
-			if (dummy.parent() == null) changedNodes.add(dummy); // falls die Wurzel selbst noch nicht gespeichert wurde
+			if (dummy.parent() == null && dummy.canBeChanged) changedNodes.add(dummy); // falls die Wurzel selbst noch nicht gespeichert wurde
 			dummy = dummy.parent;
 		}
-		if (dummy != null && dummy.nodeFile != null) {
+		if (dummy != null && dummy.nodeFile != null && dummy.canBeChanged) {
 			changedNodes.add(dummy); // fügt die (schon mal gespeicherte) wurzel des aktuellen Teilbaums zur Speicher-Liste hinuzu
 		}
 	}
@@ -707,16 +711,36 @@ public class TreeNode {
 		nodeFileHasBeenLoaded=true;
 		File f=new File(fileUrl.getFile());
 		this.setText(f.getName());
+		this.canBeChanged=false;
+		this.setBGColor(Color.yellow);
 		File [] subs=f.listFiles();
 		TreeMap<String,File> files=new TreeMap<String,File>(ObjectComparator.get());
+		TreeMap<String,File> directories=new TreeMap<String,File>(ObjectComparator.get());
 		for (int i=0; i<subs.length; i++){
-			String name=subs[i].getName();
-			if (!name.startsWith(".")) files.put(name, subs[i]);
+			File file=subs[i];
+			String name=file.getName();
+			if (!name.startsWith(".")) {
+				if (file.isDirectory()){
+					directories.put(name, file);
+				} else {
+					files.put(name, file);
+				}
+			}
+		}
+		for (Iterator<String> it = directories.keySet().iterator(); it.hasNext();){
+			String name=it.next();			
+			TreeNode child=new TreeNode(name);
+			child.canBeChanged =false;
+			child.nodeFile=directories.get(name).toURL();
+			child.setBGColor(Color.yellow);
+			this.addChild(child);
 		}
 		for (Iterator<String> it = files.keySet().iterator(); it.hasNext();){
 			String name=it.next();			
 			TreeNode child=new TreeNode(name);
+			child.canBeChanged =false;
 			child.nodeFile=files.get(name).toURL();
+			child.setBGColor(Color.cyan);
 			this.addChild(child);
 		}
 	}
@@ -902,6 +926,10 @@ public class TreeNode {
 	private boolean readTreeFile(BufferedReader file) throws IOException {
 		while (file.ready() && this.formula == null) {
 			String tag = Tools.readNextTag(file);
+			if (tag==null){
+				System.out.println("empty tag found!");
+				continue;
+			}
 			if (tag.equals("<icon BUILTIN=\"button_cancel\"/>")) this.parent.formula = new Formula("\\rgb{ff0000,\\nok }" + this.parent.formula.toString());
 			if (tag.equals("<icon BUILTIN=\"idea\"/>")) this.parent.formula = new Formula("\\info " + this.parent.formula.toString());
 			if (tag.equals("<icon BUILTIN=\"messagebox_warning\"/>") || tag.equals("<icon BUILTIN=\"clanbomber\"/>")) this.parent.formula = new Formula("\\bomb " + this.parent.formula.toString());
@@ -939,6 +967,7 @@ public class TreeNode {
 
 	private boolean save() {
 		if (nodeFile != null) {
+			System.out.println("saving "+nodeFile);
 			try {
 				String filename = nodeFile.getFile();
 				if (Tools.fileIsLocal(nodeFile) && Tools.fileExists(nodeFile) && !filename.contains(".tmp.")) {
