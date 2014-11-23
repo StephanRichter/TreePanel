@@ -270,6 +270,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 			TreeNode dropNode = getNodeAt(arg0.getPoint());
 			
 			if (dropNode!=dragNode){ // drag and drop places are different => we are dragging a node
+				boolean flipForward=false;
 				// Next: test, whether the target is an descendant of our dragged node
 				TreeNode testNode = dropNode;
 				while (testNode.parent()!=null){
@@ -277,6 +278,15 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 					if (testNode==dragNode){
 						System.err.println("Can not drag a node to an child of itself!");
 						return;
+					}
+				}
+				
+				testNode=dragNode;
+				while (testNode.prev()!=null){
+					testNode=testNode.prev();
+					if (testNode==dropNode){
+						flipForward=true;
+						break;
 					}
 				}
 
@@ -294,6 +304,11 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 					if (tree.parent() != null && cuttedNode != null) {
 						tree.addBrother(cuttedNode);
 						cuttedNode = cuttedNode.clone();
+					}
+					
+					if (flipForward){
+						dropNode.cutoff();
+						dragNode.addBrother(dropNode);						
 					}
 
 					// now we do the ui update!
