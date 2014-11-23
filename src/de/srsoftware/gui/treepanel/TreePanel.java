@@ -256,6 +256,47 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 		dragNode = getNodeAt(arg0.getPoint());
 	}
 	
+	public void dragAndDrop(TreeNode draggedNode,TreeNode targetNode){
+		 // drag and drop places are different => we are dragging a node
+		boolean flipForward=false;
+		// Next: test, whether the target is an descendant of our dragged node
+		TreeNode testNode = targetNode;
+		while (testNode.parent()!=null){
+			testNode=testNode.parent();
+			if (testNode==draggedNode){
+				System.err.println("Can not drag a node to an child of itself!");
+				return;
+			}
+		}
+		
+		testNode=draggedNode;
+		while (testNode.prev()!=null){
+			testNode=testNode.prev();
+			if (testNode==targetNode){
+				flipForward=true;
+				break;
+			}
+		}
+
+		if (draggedNode.parent() != null) { // we can not drag the root!
+			// Next: cut & paste without triggering UI update (compare with cut() method)
+			draggedNode.cutoff();
+			targetNode.addBrother(draggedNode);
+			
+			if (flipForward){
+				targetNode.cutoff();
+				draggedNode.addBrother(targetNode);						
+			}
+
+			// now we do the ui update!
+			if (targetNode.parent() != null){
+				setTreeTo(targetNode.parent());
+			} else {
+				setTreeTo(targetNode);
+			}
+		}
+	}
+	
 	public void mouseReleased(MouseEvent arg0) {
 		// bei Doppelklick: Aktion auslösen
 		if (arg0.getClickCount() > 1) {
@@ -269,44 +310,8 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 			// Bestimmen des geklickten Knotens
 			TreeNode dropNode = getNodeAt(arg0.getPoint());
 			
-			if (dropNode!=dragNode){ // drag and drop places are different => we are dragging a node
-				boolean flipForward=false;
-				// Next: test, whether the target is an descendant of our dragged node
-				TreeNode testNode = dropNode;
-				while (testNode.parent()!=null){
-					testNode=testNode.parent();
-					if (testNode==dragNode){
-						System.err.println("Can not drag a node to an child of itself!");
-						return;
-					}
-				}
-				
-				testNode=dragNode;
-				while (testNode.prev()!=null){
-					testNode=testNode.prev();
-					if (testNode==dropNode){
-						flipForward=true;
-						break;
-					}
-				}
-
-				if (dragNode.parent() != null) { // we can not drag the root!
-					// Next: cut & paste without triggering UI update (compare with cut() method)
-					dragNode.cutoff();
-					dropNode.addBrother(dragNode);
-					
-					if (flipForward){
-						dropNode.cutoff();
-						dragNode.addBrother(dropNode);						
-					}
-
-					// now we do the ui update!
-					if (dropNode.parent() != null){
-						setTreeTo(dropNode.parent());
-					} else {
-						setTreeTo(dropNode);
-					}
-				}
+			if (dropNode!=dragNode){
+				dragAndDrop(dragNode, dropNode);
 				return;
 			}
 
