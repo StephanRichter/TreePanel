@@ -250,7 +250,9 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 
 	public void mouseExited(MouseEvent arg0) {}
 
-	public void mousePressed(MouseEvent arg0) {
+	public void mousePressed(MouseEvent arg0) {}
+
+	public void mouseReleased(MouseEvent arg0) {
 		// Bestimmen des geklcikten Knotens
 		TreeNode clickedNode = getNodeAt(arg0.getPoint());
 		// bei Doppelklick: Aktion auslösen
@@ -279,8 +281,6 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 			}
 		}
 	}
-
-	public void mouseReleased(MouseEvent arg0) {}
 
 	public void mouseWheelMoved(MouseWheelEvent arg0) {
 		if (arg0.getWheelRotation() == -1) {
