@@ -255,7 +255,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 		// Bestimmen des geklickten Knotens
 		dragNode = getNodeAt(arg0.getPoint());
 	}
-
+	
 	public void mouseReleased(MouseEvent arg0) {
 		// bei Doppelklick: Aktion auslösen
 		if (arg0.getClickCount() > 1) {
@@ -291,20 +291,9 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 				}
 
 				if (dragNode.parent() != null) { // we can not drag the root!
-					tree=dragNode; // set current node to dragged node, but do not trigger UI update
-					
-					// Next: cut without triggering UI update (compare with cut() method)
-					cuttedNode = tree;
-					tree.cutoff();
-			
-					// jump to target in preparation for past
-					tree=dropNode;
-
-					// code from the paste method without UI update trigger
-					if (tree.parent() != null && cuttedNode != null) {
-						tree.addBrother(cuttedNode);
-						cuttedNode = cuttedNode.clone();
-					}
+					// Next: cut & paste without triggering UI update (compare with cut() method)
+					dragNode.cutoff();
+					dropNode.addBrother(dragNode);
 					
 					if (flipForward){
 						dropNode.cutoff();
@@ -312,10 +301,10 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 					}
 
 					// now we do the ui update!
-					if (tree.parent() != null){
-						setTreeTo(tree.parent());
+					if (dropNode.parent() != null){
+						setTreeTo(dropNode.parent());
 					} else {
-						setTreeTo(tree);
+						setTreeTo(dropNode);
 					}
 				}
 				return;
