@@ -257,9 +257,12 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	}
 	
 	public void dragAndDrop(TreeNode draggedNode,TreeNode targetNode){
-		 // drag and drop places are different => we are dragging a node
-		boolean flipForward=false;
-		// Next: test, whether the target is an descendant of our dragged node
+		if (targetNode.parent()==null){
+			System.err.println("Can not replace root!");
+			return;
+		}
+
+		// test, whether the target is an descendant of our dragged node
 		TreeNode testNode = targetNode;
 		while (testNode.parent()!=null){
 			testNode=testNode.parent();
@@ -269,6 +272,8 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 			}
 		}
 		
+		// test, whether target is in the same level as draggedNode, and previous to it
+		boolean flipForward=false;
 		testNode=draggedNode;
 		while (testNode.prev()!=null){
 			testNode=testNode.prev();
@@ -311,6 +316,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 			TreeNode dropNode = getNodeAt(arg0.getPoint());
 			
 			if (dropNode!=dragNode){
+			 // drag and drop places are different => we are dragging a node
 				dragAndDrop(dragNode, dropNode);
 				return;
 			}
