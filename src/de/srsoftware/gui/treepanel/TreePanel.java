@@ -414,10 +414,11 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	public void postPaint(Graphics g){
 		if (dragNode!=null && mouseOffset !=null){
 			Point mp = MouseInfo.getPointerInfo().getLocation();
-			mp.translate(-mouseOffset.x, -mouseOffset.y);
-			g.drawOval(mp.x, mp.y, 50, 10);
+			mp.translate(-(25+mouseOffset.x), -(7+mouseOffset.y));
+			g.setColor(dragNode.getForeColor());
+			g.drawRoundRect(mp.x, mp.y, 50, 15, 5, 5);
 			g.setColor(dragNode.getBGColor());
-			g.fillOval(mp.x, mp.y, 50, 10);
+			g.fillRoundRect(mp.x, mp.y, 50, 15, 5, 5);
 		}		
 	}
 
