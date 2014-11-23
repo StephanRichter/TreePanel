@@ -251,11 +251,13 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 
 	public void mouseExited(MouseEvent arg0) {}
 
-	public void mousePressed(MouseEvent arg0) {}
-
-	public void mouseReleased(MouseEvent arg0) {
+	public void mousePressed(MouseEvent arg0) {
 		// Bestimmen des geklickten Knotens
 		draggedNode = getNodeAt(arg0.getPoint());
+		System.out.println(draggedNode);
+	}
+
+	public void mouseReleased(MouseEvent arg0) {
 		// bei Doppelklick: Aktion auslösen
 		if (arg0.getClickCount() > 1) {
 			if (tree.getLink() != null)
@@ -263,8 +265,16 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 			Tools.execute(tree.getLink());
 			else
 			// Bearbeiten, falls normaler Knoten
-			editTree(draggedNode);
+			editTree(tree);
 		} else {
+			// Bestimmen des geklickten Knotens
+			TreeNode dragTargetNode = getNodeAt(arg0.getPoint());
+			if (dragTargetNode!=draggedNode){
+				System.out.println("we are dragging!");
+				System.out.println(draggedNode+" => "+dragTargetNode);
+				return;
+			}
+
 			if (arg0.getButton() == MouseEvent.BUTTON2) {
 				// Knoten-Text in Zwischenablage kopieren
 				copyToClipboard(draggedNode);
