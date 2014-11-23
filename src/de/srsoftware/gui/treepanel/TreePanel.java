@@ -100,6 +100,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	private Image backgroundImage;
 	private JLabel label;
 	private JDialog infoDialog;
+	private TreeNode draggedNode;
 
 	public TreePanel() {
 		super();
@@ -253,8 +254,8 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	public void mousePressed(MouseEvent arg0) {}
 
 	public void mouseReleased(MouseEvent arg0) {
-		// Bestimmen des geklcikten Knotens
-		TreeNode clickedNode = getNodeAt(arg0.getPoint());
+		// Bestimmen des geklickten Knotens
+		draggedNode = getNodeAt(arg0.getPoint());
 		// bei Doppelklick: Aktion auslösen
 		if (arg0.getClickCount() > 1) {
 			if (tree.getLink() != null)
@@ -262,20 +263,20 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 			Tools.execute(tree.getLink());
 			else
 			// Bearbeiten, falls normaler Knoten
-			editTree(clickedNode);
+			editTree(draggedNode);
 		} else {
 			if (arg0.getButton() == MouseEvent.BUTTON2) {
 				// Knoten-Text in Zwischenablage kopieren
-				copyToClipboard(clickedNode);
+				copyToClipboard(draggedNode);
 			} else {
 				// zu Knoten wechseln oder Bild vergrößern
 				if (tree != null) {
-					if (tree == clickedNode)
+					if (tree == draggedNode)
 					// wenn geklickter Knoten schon im Zentrum ist: Bild ggf. vergrößern
 					showNodeImage();
 					else {
 						// wenn geklickter Knoten in der Peripherie: zentrieren
-						setTreeTo(clickedNode);
+						setTreeTo(draggedNode);
 					}
 				}
 			}
