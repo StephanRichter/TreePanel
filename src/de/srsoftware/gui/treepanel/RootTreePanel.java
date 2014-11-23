@@ -70,6 +70,7 @@ public class RootTreePanel extends TreePanel {
 			d.height=paint((Graphics2D)g,tree,ff, true).height;
 			paintFamily((Graphics2D) g,tree,leftCenter,d, ff);
 		}
+		postPaint(g);
 	}
 
 	@Override
