@@ -1,11 +1,13 @@
 package de.srsoftware.gui.treepanel;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.LayoutManager;
+import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -101,6 +103,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	private JLabel label;
 	private JDialog infoDialog;
 	private TreeNode dragNode;
+	private Point mouseOffset;
 
 	public TreePanel() {
 		super();
@@ -252,8 +255,11 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	public void mouseExited(MouseEvent arg0) {}
 
 	public void mousePressed(MouseEvent arg0) {
+		this.setCursor(new Cursor(Cursor.MOVE_CURSOR));
+		mouseOffset=getLocationOnScreen();
 		// Bestimmen des geklickten Knotens
 		dragNode = getNodeAt(arg0.getPoint());
+		organizerThread.go();
 	}
 	
 	public void dragAndDrop(TreeNode draggedNode,TreeNode targetNode){
@@ -303,6 +309,8 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	}
 	
 	public void mouseReleased(MouseEvent arg0) {
+		this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));		
+
 		// bei Doppelklick: Aktion auslösen
 		if (arg0.getClickCount() > 1) {
 			if (tree.getLink() != null)
@@ -318,6 +326,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 			if (dropNode!=dragNode){
 			 // drag and drop places are different => we are dragging a node
 				dragAndDrop(dragNode, dropNode);
+				dragNode=null;
 				return;
 			}
 
@@ -337,6 +346,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 				}
 			}
 		}
+		dragNode=null;
 	}
 
 	public void mouseWheelMoved(MouseWheelEvent arg0) {
@@ -399,6 +409,17 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	public void paint(Graphics g) {
 		super.paint(g);
 		if (tree == null && backgroundImage != null) g.drawImage(backgroundImage, (this.getWidth() - backgroundImage.getWidth(this)) / 2, (this.getHeight() - backgroundImage.getHeight(this)) / 2, this);
+	}
+	
+	public void postPaint(Graphics g){
+		if (dragNode!=null && mouseOffset !=null){
+			Point mp = MouseInfo.getPointerInfo().getLocation();
+			mp.translate(-(25+mouseOffset.x), -(7+mouseOffset.y));
+			g.setColor(dragNode.getForeColor());
+			g.drawRoundRect(mp.x, mp.y, 50, 15, 5, 5);
+			g.setColor(dragNode.getBGColor());
+			g.fillRoundRect(mp.x, mp.y, 50, 15, 5, 5);
+		}		
 	}
 
 	public void paste() {

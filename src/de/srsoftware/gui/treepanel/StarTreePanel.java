@@ -46,6 +46,7 @@ public class StarTreePanel extends TreePanel {
 		super.paint(g);
 		paint((Graphics2D)g, tree, null, 0,new FormulaFont(g.getFont()).withSize(fontSize));
 		updatedSinceLastChange = true;
+		postPaint(g);
 	}
 
 	public void repaint() {

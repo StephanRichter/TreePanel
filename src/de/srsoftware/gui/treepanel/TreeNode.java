@@ -440,7 +440,7 @@ public class TreeNode {
 	public Dimension paint(Graphics g, ImageObserver obs, FormulaFont font) {
 		return paint(g, obs, font, true);
 	}
-
+	
 	public Dimension paint(Graphics g, ImageObserver obs, FormulaFont font, boolean draw) {
 		if (formula != null) {
 			Dimension formulaDimension = formula.getSize(font);
