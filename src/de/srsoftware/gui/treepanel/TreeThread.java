@@ -1,5 +1,7 @@
 package de.srsoftware.gui.treepanel;
 
+import java.util.ConcurrentModificationException;
+
 import javax.swing.JPanel;
 
 
@@ -38,12 +40,22 @@ public class TreeThread extends Thread {
   	i=25;
   	while (i>=0){
   		try {
-  			if (mapper!=null) mapper.repaint();
+  			if (mapper!=null) {
+  				mapper.repaint();
+  			}
   			if (i>0){
   			  i--;
 				  Thread.sleep(100);
   			} else Thread.sleep(1000);
-			} catch (InterruptedException e) {}
+			} catch (InterruptedException e) {				
+			} catch (ConcurrentModificationException e){
+				try {
+					sleep(1000);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
   	}
   }
 	
