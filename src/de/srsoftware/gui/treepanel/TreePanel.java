@@ -270,30 +270,34 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 			// Bestimmen des geklickten Knotens
 			TreeNode dropNode = getNodeAt(arg0.getPoint());
 			
-			if (dropNode!=dragNode){				
-				System.out.println("we are dragging!");
-				System.out.println(dragNode+" => "+dropNode);
+			if (dropNode!=dragNode){ // drag and drop places are different => we are dragging a node
+				// Next: test, whether the target is an descendant of our dragged node
 				TreeNode testNode = dropNode;
 				while (testNode.parent()!=null){
 					testNode=testNode.parent();
 					if (testNode==dragNode){
-						System.out.println("Can not drag a node to an child of itself!");
+						System.err.println("Can not drag a node to an child of itself!");
 						return;
 					}
 				}
-				tree=dragNode;
 
-				if (tree.parent() != null) {
+				if (dragNode.parent() != null) { // we can not drag the root!
+					tree=dragNode; // set current node to dragged node, but do not trigger UI update
+					
+					// Next: cut without triggering UI update (compare with cut() method)
 					cuttedNode = tree;
 					tree.cutoff();
 			
+					// jump to target in preparation for past
 					tree=dropNode;
 
+					// code from the paste method without UI update trigger
 					if (tree.parent() != null && cuttedNode != null) {
 						tree.addBrother(cuttedNode);
 						cuttedNode = cuttedNode.clone();
 					}
-			
+
+					// now we do the ui update!
 					if (tree.parent() != null){
 						setTreeTo(tree.parent());
 					} else {
