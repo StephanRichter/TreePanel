@@ -254,7 +254,6 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	public void mousePressed(MouseEvent arg0) {
 		// Bestimmen des geklickten Knotens
 		dragNode = getNodeAt(arg0.getPoint());
-		System.out.println(dragNode);
 	}
 
 	public void mouseReleased(MouseEvent arg0) {
