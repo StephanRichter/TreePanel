@@ -269,9 +269,37 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 		} else {
 			// Bestimmen des geklickten Knotens
 			TreeNode dragTargetNode = getNodeAt(arg0.getPoint());
-			if (dragTargetNode!=draggedNode){
+			
+			if (dragTargetNode!=draggedNode){				
 				System.out.println("we are dragging!");
 				System.out.println(draggedNode+" => "+dragTargetNode);
+				TreeNode testNode = dragTargetNode;
+				while (testNode.parent()!=null){
+					testNode=testNode.parent();
+					if (testNode==draggedNode){
+						System.out.println("Can not drag a node to an child of itself!");
+						return;
+					}
+				}
+				tree=draggedNode;
+
+				if (tree.parent() != null) {
+					cuttedNode = tree;
+					tree.cutoff();
+			
+					tree=dragTargetNode;
+
+					if (tree.parent() != null && cuttedNode != null) {
+						tree.addBrother(cuttedNode);
+						cuttedNode = cuttedNode.clone();
+					}
+			
+					if (tree.parent() != null){
+						setTreeTo(tree.parent());
+					} else {
+						setTreeTo(tree);
+					}
+				}
 				return;
 			}
 
