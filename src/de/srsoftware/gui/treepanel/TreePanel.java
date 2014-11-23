@@ -100,7 +100,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	private Image backgroundImage;
 	private JLabel label;
 	private JDialog infoDialog;
-	private TreeNode draggedNode;
+	private TreeNode dragNode;
 
 	public TreePanel() {
 		super();
@@ -253,8 +253,8 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 
 	public void mousePressed(MouseEvent arg0) {
 		// Bestimmen des geklickten Knotens
-		draggedNode = getNodeAt(arg0.getPoint());
-		System.out.println(draggedNode);
+		dragNode = getNodeAt(arg0.getPoint());
+		System.out.println(dragNode);
 	}
 
 	public void mouseReleased(MouseEvent arg0) {
@@ -268,26 +268,26 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 			editTree(tree);
 		} else {
 			// Bestimmen des geklickten Knotens
-			TreeNode dragTargetNode = getNodeAt(arg0.getPoint());
+			TreeNode dropNode = getNodeAt(arg0.getPoint());
 			
-			if (dragTargetNode!=draggedNode){				
+			if (dropNode!=dragNode){				
 				System.out.println("we are dragging!");
-				System.out.println(draggedNode+" => "+dragTargetNode);
-				TreeNode testNode = dragTargetNode;
+				System.out.println(dragNode+" => "+dropNode);
+				TreeNode testNode = dropNode;
 				while (testNode.parent()!=null){
 					testNode=testNode.parent();
-					if (testNode==draggedNode){
+					if (testNode==dragNode){
 						System.out.println("Can not drag a node to an child of itself!");
 						return;
 					}
 				}
-				tree=draggedNode;
+				tree=dragNode;
 
 				if (tree.parent() != null) {
 					cuttedNode = tree;
 					tree.cutoff();
 			
-					tree=dragTargetNode;
+					tree=dropNode;
 
 					if (tree.parent() != null && cuttedNode != null) {
 						tree.addBrother(cuttedNode);
@@ -305,16 +305,16 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 
 			if (arg0.getButton() == MouseEvent.BUTTON2) {
 				// Knoten-Text in Zwischenablage kopieren
-				copyToClipboard(draggedNode);
+				copyToClipboard(dragNode);
 			} else {
 				// zu Knoten wechseln oder Bild vergrößern
 				if (tree != null) {
-					if (tree == draggedNode)
+					if (tree == dragNode)
 					// wenn geklickter Knoten schon im Zentrum ist: Bild ggf. vergrößern
 					showNodeImage();
 					else {
 						// wenn geklickter Knoten in der Peripherie: zentrieren
-						setTreeTo(draggedNode);
+						setTreeTo(dragNode);
 					}
 				}
 			}
