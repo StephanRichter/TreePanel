@@ -286,8 +286,10 @@ public class TreeNode {
 			}
 			i++;
 		}
+		URL rootUrl = getRoot().nodeFile;
+		String rootFile=(rootUrl==null)?null:rootUrl.toString();
 		
-		return _("Node in File:\n#\n\nText:\n#\n\nImage:\n#\n\nLink:\n#\n\nText color: #\nBackground color: #",new Object[]{Tools.shorten(getRoot().nodeFile.toString()),Tools.shorten(getText()),nodeImage,link,foregroundColor,backgroundColor});
+		return _("Node in File:\n#\n\nText:\n#\n\nImage:\n#\n\nLink:\n#\n\nText color: #\nBackground color: #",new Object[]{ Tools.shorten(rootFile),Tools.shorten(getText()),nodeImage,link,foregroundColor,backgroundColor});
 
 	}
 
