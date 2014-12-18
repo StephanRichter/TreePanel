@@ -31,6 +31,25 @@ import de.srsoftware.tools.translations.Translations;
 import de.srsoftware.xmlformatter.XmlFormatter;
 
 public class TreeNode {
+	
+	private TreeNode parent = null; // this variable holds the pointer to the parent node, if given
+	private TreeNode firstChild = null;// this variable holds the pointer to the current node's first child
+	private TreeNode lastChild = null;// this variable holds the pointer to the current node's last child
+	private TreeNode nextBrother = null;// this variable holds the pointer to the current node's next brother, if given
+	private TreeNode previousBrother = null;// this variable holds the pointer to the current node's previous brother, if given
+	private TreeNode referencedNode = null;
+	private boolean folded = true; // determines whether a node's children shall be shown
+	private Point origin = null; // the node's current drawing position
+	private URL nodeFile = null; // hold the URL of the file, which saves this node
+	private NodeContent content = null; // the node's content
+	private int numChildren = 0; // the number of children the node has
+	private static boolean centered = false; // determines, whether =>origin specifies the center or the upper left corner of the node
+	private static Color swappedColor = Color.white;
+	private boolean shrinkLargeImages = true;
+	private int maxBackupNumber = 10;
+	private boolean canBeChanged = true;
+	
+	
 	private static TreeSet<TreeNode> changedNodes = new TreeSet<TreeNode>(new ObjectComparator());
 	public static boolean existUnsavedNodes() {
 		return changedNodes.size() > 0;
@@ -42,7 +61,7 @@ public class TreeNode {
 		if (url==null) return null;
 		for (TreeNode n : changedNodes) {
 			URL u = n.nodeFile();
-			if ((u != null) && (url.equals(u)) && n.nodeFileHasBeenLoaded) return n;
+			if ((u != null) && (url.equals(u)) && n.content!=null) return n;
 		}
 		return null;
 	}
@@ -110,53 +129,20 @@ public class TreeNode {
 		}
 		return fileUrl;
 	}
-	private TreeNode parent = null; // this variable holds the pointer to the parent node, if given
-	private TreeNode firstChild = null;// this variable holds the pointer to the current node's first child
-	private TreeNode lastChild = null;// this variable holds the pointer to the current node's last child
-	private TreeNode nextBrother = null;// this variable holds the pointer to the current node's next brother, if given
-	private TreeNode previousBrother = null;// this variable holds the pointer to the current node's previous brother, if given
-	private TreeNode referencedNode = null;
-	@SuppressWarnings("unused")
-	private NodeId nodeId = null; // this holds the node's id
-	private boolean folded = true; // determines whether a node's children shall be shown
-	private NodeImage nodeImage = null; // holds the node's image, if given
-	private Color foregroundColor = null; // color for text
 
-	private Color backgroundColor = null; // color for filling the nodes
-
-	private URL nodeFile = null; // hold the URL of the file, which saves this node
-
-	private boolean nodeFileHasBeenLoaded = false; // is set to false, for nodes, that only point to files, and to true, if the file has been loaded
-
-	private URL link = null; // holds a given link
-
-	private Point origin = null; // the node's current drawing position
-
-	private Formula formula = null; // the node's formula i.e. text
-
-	private int numChildren = 0; // the number of children the node has
-	
-	private static boolean centered = false; // determines, whether =>origin specifies the center or the upper left corner of the node
-
-	private static Color swappedColor = Color.white;
-
-	private boolean shrinkLargeImages = true;
-
-	private int maxBackupNumber = 10;
-	private boolean canBeChanged = true;
 
 	/**
 	 * create a new node with empty formula
 	 */
 	public TreeNode() {
-		initialize(null, null);
+		this(null, null);
 	}
 
 	/**
 	 * create a new node with empty formula at position origin
 	 */
 	public TreeNode(Point origin) {
-		initialize(null, origin);
+		this(null, origin);
 	}
 
 	/**
@@ -165,7 +151,7 @@ public class TreeNode {
 	 * @param text the text for the formula
 	 */
 	public TreeNode(String text) {
-		initialize(text, null);
+		this(text, null);
 	}
 
 	/**
@@ -174,7 +160,8 @@ public class TreeNode {
 	 * @param text the text for the formula
 	 */
 	public TreeNode(String text,Point origin) {
-		initialize(text, origin);
+		content = new NodeContent(text);
+		this.origin = (origin != null) ? origin : new Point(3000, 500);
 	}
 
 	public void addBrother(TreeNode brother) {
@@ -218,18 +205,9 @@ public class TreeNode {
 	}
 
 	public TreeNode clone() {
-		try {
-			TreeNode result = new TreeNode(this.getFormulaCode(),this.getOrigin());
-			result.backgroundColor = new Color(backgroundColor.getRGB());
-			result.foregroundColor = new Color(foregroundColor.getRGB());
-			result.nodeImage = (nodeImage == null) ? null : nodeImage.clone(); // holds the node's image, if given
-			result.link = (link == null) ? null : new URL(link.toString());
-			return result;
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} // holds a given link
-		return null;
+		TreeNode result = new TreeNode(this.getFormulaCode(),this.getOrigin());
+		result.content=this.content.clone();
+		return result;
 	}
 
 	public void cutoff() {
@@ -254,7 +232,7 @@ public class TreeNode {
 	}
 
 	public Color getBGColor() {
-		return this.backgroundColor;
+		return content.getBackgroundColor();
 	}
 
 	public Color getColorFromCode(String code) {
@@ -268,12 +246,11 @@ public class TreeNode {
 	}
 
 	public Color getForeColor() {
-		// TODO Auto-generated method stub
-		return foregroundColor;
+		return content.getForegroundColor();
 	}
 
 	public String getFormulaCode() { // get the code
-		return (formula != null) ? formula.toString() : null;
+		return content.getFormulaCode();
 	}
 
 	public Object getFullInfo() {
@@ -289,16 +266,16 @@ public class TreeNode {
 		URL rootUrl = getRoot().nodeFile;
 		String rootFile=(rootUrl==null)?null:rootUrl.toString();
 		
-		return _("Node in File:\n#\n\nText:\n#\n\nImage:\n#\n\nLink:\n#\n\nText color: #\nBackground color: #",new Object[]{ Tools.shorten(rootFile),Tools.shorten(getText()),nodeImage,link,foregroundColor,backgroundColor});
+		return _("Node in File:\n#\n\nText:\n#\n\nImage:\n#\n\nLink:\n#\n\nText color: #\nBackground color: #",new Object[]{ Tools.shorten(rootFile),Tools.shorten(getText()),content.getNodeImage(),content.getLink(),content.getForegroundColor(),content.getBackgroundColor()});
 
 	}
 
 	public URL getLink() {
-		return link;
+		return content.getLink();
 	}
 
 	public NodeImage getNodeImage() {
-		return nodeImage;
+		return content.getNodeImage();
 	}
 
 	public int getNumChildren() {
@@ -331,7 +308,7 @@ public class TreeNode {
 	}
 
 	public String getText() { // get the text only, without formatting
-		return (formula != null) ? formula.getText() : null;
+		return content.getText();
 	}
 	
 	public String getTextWithoutPath() {
@@ -345,7 +322,7 @@ public class TreeNode {
 	}
 
 	public boolean hasBeenLoadedFromFile() {
-		return this.nodeFileHasBeenLoaded;
+		return content.hasBeenLoaded();
 	}
 	
 	public boolean hasUnsavedChanges() {
@@ -353,7 +330,7 @@ public class TreeNode {
 	}
 
 	public boolean isFolded() {
-		return (numChildren>0 && folded) || (nodeFile!=null && !nodeFileHasBeenLoaded);
+		return (numChildren>0 && folded) || (nodeFile!=null && !content.hasBeenLoaded());
 	}
 
 	public TreeNode lastChild() {
@@ -378,8 +355,8 @@ public class TreeNode {
 	}
 
 	public void loadFromFile(URL fileUrl) throws FileNotFoundException, IOException, DataFormatException, URISyntaxException {
-		if (!nodeFileHasBeenLoaded) {
-			nodeFileHasBeenLoaded = true;
+		if (!content.hasBeenLoaded()) {
+			content.setLoaded();
 			if (!Tools.fileIsLocal(fileUrl)) {
 				try {
 					fileUrl = new URL(fileUrl.toString().replace(" ", "%20"));
@@ -447,36 +424,36 @@ public class TreeNode {
 	}
 	
 	public Dimension paint(Graphics g, ImageObserver obs, FormulaFont font, boolean draw) {
-		if (formula != null) {
-			Dimension formulaDimension = formula.getSize(font);
-			if (formulaDimension.width < 10 && nodeImage != null) formulaDimension.width = 300;
-			Dimension imageDimension = (nodeImage != null) ? ((shrinkLargeImages) ? nodeImage.getResizedDimension(formulaDimension.width, obs) : nodeImage.getDimension(obs)) : (new Dimension());
+		if (content.hasFormula()) {
+			Dimension formulaDimension = content.getSize(font);
+			if (formulaDimension.width < 10 && content.hasNodeImage()) {
+				formulaDimension.width = 300;
+			}
+			Dimension imageDimension = (content.hasNodeImage()) ? ((shrinkLargeImages) ? content.getNodeImage().getResizedDimension(formulaDimension.width, obs) : content.getNodeImage().getDimension(obs)) : (new Dimension());
 			Dimension nodeDimension = new Dimension(Math.max(formulaDimension.width, imageDimension.width)+4, formulaDimension.height + imageDimension.height+4);
 			Point upperLeft = (centered) ? new Point(origin.x - nodeDimension.width / 2, origin.y - nodeDimension.height / 2) : origin;
 			if (draw) {
 				// the following lines draw arcs besides the node, if the node contains a link
-				if (link != null) {
+				if (content.hasLink()) {
 					g.drawArc(upperLeft.x - (nodeDimension.height / 2), upperLeft.y - 2, nodeDimension.height , nodeDimension.height , 90, 180);
 					g.drawArc(upperLeft.x + nodeDimension.width  - (nodeDimension.height / 2), upperLeft.y - 2, nodeDimension.height , nodeDimension.height, 270, 180);
 				}
 				swapColor(g);
-				if (this.backgroundColor != null) g.setColor(this.backgroundColor);
+				g.setColor(content.getBackgroundColor());
 				g.fillRoundRect(upperLeft.x - 2, upperLeft.y - 2, nodeDimension.width, nodeDimension.height , 5, 5);
 				swapColor(g);
-				if (this.foregroundColor != null) {
-					g.setColor(this.foregroundColor);
-					font=font.color(foregroundColor);
-				}
+				g.setColor(content.getForegroundColor());
+				font=font.color(content.getForegroundColor());
 				g.drawRoundRect(upperLeft.x - 2, upperLeft.y - 2, nodeDimension.width, nodeDimension.height , 5, 5);
 				
 				if (formulaDimension.width > imageDimension.width) {
-					g.drawImage(formula.image(font), upperLeft.x, upperLeft.y + imageDimension.height, obs);
+					g.drawImage(content.getFormula().image(font), upperLeft.x, upperLeft.y + imageDimension.height, obs);
 				} else {
-					g.drawImage(formula.image(font), upperLeft.x + (imageDimension.width - formulaDimension.width) / 2, upperLeft.y + imageDimension.height, obs);
+					g.drawImage(content.getFormula().image(font), upperLeft.x + (imageDimension.width - formulaDimension.width) / 2, upperLeft.y + imageDimension.height, obs);
 				}
-				if (this.nodeImage != null) {
+				if (content.hasNodeImage()) {
 					g.drawString("\u270D", upperLeft.x + 2, upperLeft.y + g.getFontMetrics().getHeight() + 2);
-					nodeImage.paint(g, obs, upperLeft, imageDimension);
+					content.getNodeImage().paint(g, obs, upperLeft, imageDimension);
 				}
 			}
 			return nodeDimension;
@@ -485,16 +462,16 @@ public class TreeNode {
 	}
 
 	public void paintWithoutImages(Graphics g, ImageObserver obs,FormulaFont font) {
-		if (formula != null) {
-			Dimension d = formula.getSize(font);
+		if (content.hasFormula()) {
+			Dimension d = content.getSize(font);
 			Point upperLeft = (centered) ? new Point(origin.x - d.width / 2, origin.y - d.height / 2) : origin;
 			swapColor(g);
-			if (this.backgroundColor != null) g.setColor(this.backgroundColor);
+			g.setColor(content.getBackgroundColor());
 			g.fillRoundRect(upperLeft.x - 2, upperLeft.y - 2, d.width + 2, d.height + 2, 5, 5);
 			swapColor(g);
-			if (this.foregroundColor != null) g.setColor(this.foregroundColor);
+			g.setColor(content.getForegroundColor());
 			g.drawRoundRect(upperLeft.x - 2, upperLeft.y - 2, d.width + 2, d.height + 2, 5, 5);
-			g.drawImage(formula.image(font), upperLeft.x, upperLeft.y, obs);
+			g.drawImage(content.getFormula().image(font), upperLeft.x, upperLeft.y, obs);
 		}
 	}
 
@@ -553,7 +530,7 @@ public class TreeNode {
 		try {
 			f.createNewFile();
 			this.save();
-			this.nodeFileHasBeenLoaded = true;
+			content.setLoaded();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			return false;
@@ -563,8 +540,7 @@ public class TreeNode {
 
 	public void setBGColor(Color c) {
 		// System.out.println("Hintergrundfarbe wird gesetzt...");
-		if (!c.equals(this.backgroundColor)) {
-			this.backgroundColor = c;
+		if (content.setBackgroundColor(c)) {
 			treeChanged();
 		}
 	}
@@ -574,28 +550,28 @@ public class TreeNode {
 	}
 
 	public void setForeColor(Color c) {
-		this.foregroundColor = c;
-		treeChanged();
-
+		if (content.setForegroundColor(c)){
+			treeChanged();
+		}
 	}
 
 	public void setFormula(Formula f) {
-		formula = f;
+		content.setFormula(f);
 		treeChanged();
 	}
 
 	public void setImage(URL fileUrl) {
-		this.nodeImage = (fileUrl == null) ? null : new NodeImage(fileUrl);
+		content.setNodeImage(fileUrl);
 		treeChanged();
 	}
 
 	public void setLink(URL link) {
-		this.link = link;
+		content.setLink(link);
 		treeChanged();
 	}
 
 	public void setNodeImage(NodeImage nodeImage) {
-		this.nodeImage = nodeImage;
+		content.setNodeImage(nodeImage);
 		treeChanged();
 	}
 
@@ -608,7 +584,7 @@ public class TreeNode {
 	}
 
 	public void setText(String tx) {
-		formula = new Formula(tx);
+		content.setFormula(tx);
 		treeChanged();
 	}
 
@@ -671,26 +647,12 @@ public class TreeNode {
 		int j = txt.indexOf(">", i);
 		txt = txt.substring(0, i) + txt.substring(j + 1);
 		URL imageUrl = Tools.getURLto(this.getRoot().nodeFile.toString(), file);
-		this.nodeImage = new NodeImage(imageUrl);
+		content.setNodeImage(imageUrl);
 		return txt;
 	}
 
 	private String formatFormula(String s) {
 		return s.replaceAll("(\\D)(\\d)", "$1\\\\_{$2").replaceAll("(\\d)(\\D)", "$1}$2").replaceAll("(\\d)$","$1}");
-	}
-
-	/**
-	 * internal method to initialize the TreeNode
-	 * 
-	 * @param text the text, which is passed to the node's formula
-	 */
-	private void initialize(String text, Point origin) {
-		if (text != null) this.formula = new Formula(text);
-		this.origin = (origin != null) ? origin : new Point(3000, 500);
-		this.foregroundColor = Color.black;
-		this.backgroundColor = Color.white;
-		this.nodeId = new NodeId();
-		nodeFileHasBeenLoaded = false;
 	}
 
 	private boolean isFolder(URL fileUrl) {
@@ -710,7 +672,7 @@ public class TreeNode {
 
 	@SuppressWarnings("deprecation")
 	private void loadFolder(URL fileUrl) throws FileNotFoundException, MalformedURLException, IOException {
-		nodeFileHasBeenLoaded=true;
+		content.setLoaded();
 		File f=new File(fileUrl.getFile());
 		this.setText(f.getName());
 		this.canBeChanged=false;
@@ -805,13 +767,13 @@ public class TreeNode {
 				}
 
 				if (line.startsWith("text=")) {
-					node.formula = new Formula(line.substring(5));
+					node.content.setFormula(line.substring(5));
 				}
 				if (line.startsWith("content=")) {
 					String content = line.substring(8).replace("\\", "/");
 					if (content.startsWith("Link:")) {
 						try {
-							node.link = Tools.getURLto(this.getRoot().nodeFile.toString(), content.substring(5));
+							node.content.setLink(Tools.getURLto(this.getRoot().nodeFile.toString(), content.substring(5)));
 						} catch (MalformedURLException e) {
 							Tools.message(_("external link (#) could not be resolved!",content.substring(5)));
 						}
@@ -829,7 +791,7 @@ public class TreeNode {
 					String content = line.substring(6).replace("\\", "/");
 					try {
 						URL imageUrl = Tools.getURLto(this.getRoot().nodeFile.toString(), content);
-						node.nodeImage = new NodeImage(imageUrl);
+						node.content.setNodeImage(imageUrl);
 					} catch (MalformedURLException e) {
 						Tools.message(_("was not able to resolve path to file (#)!",content));
 					}
@@ -839,9 +801,9 @@ public class TreeNode {
 						int r = Integer.decode("0x" + line.substring(14, 16)).intValue();
 						int g = Integer.decode("0x" + line.substring(12, 14)).intValue();
 						int b = Integer.decode("0x" + line.substring(10, 12)).intValue();
-						node.foregroundColor = new Color(r, g, b);
+						node.content.setForegroundColor(new Color(r, g, b));
 					} catch (Exception e) {
-						node.foregroundColor = Tools.lookupColor(line.substring(7));
+						node.content.setForegroundColor(Tools.lookupColor(line.substring(7)));
 					}
 				}
 				if (line.startsWith("Color2=")) {
@@ -849,9 +811,9 @@ public class TreeNode {
 						int r = Integer.decode("0x" + line.substring(14, 16)).intValue();
 						int g = Integer.decode("0x" + line.substring(12, 14)).intValue();
 						int b = Integer.decode("0x" + line.substring(10, 12)).intValue();
-						node.backgroundColor = new Color(r, g, b);
+						node.content.setBackgroundColor(new Color(r, g, b));
 					} catch (Exception e) {
-						node.backgroundColor = Tools.lookupColor(line.substring(7));
+						node.content.setBackgroundColor(Tools.lookupColor(line.substring(7)));
 					}
 				}
 			}
@@ -877,7 +839,7 @@ public class TreeNode {
 		if (url.startsWith("http://www.genome.jp/dbget-bin/www_bget?R") ||url.startsWith("http://www.genome.jp/dbget-bin/www_bget?rn:R")) loadKeggReaction(fileUrl);
 		if (url.startsWith("http://www.genome.jp/dbget-bin/www_bget?C") ||url.startsWith("http://www.genome.jp/dbget-bin/www_bget?cpd:C")) loadKeggSubstance(fileUrl);
 		TreeNode child=new TreeNode("\\=>  browse \\=> ");
-		child.link=fileUrl;
+		child.content.setLink(fileUrl);
 		addChild(child);
 		nodeFile=fileUrl;
 	}
@@ -892,7 +854,7 @@ public class TreeNode {
 		}
 		if (name==null) name="unnamed reaction";
 		name=name.replace("<=>", "\\<=> ");
-		formula=new Formula("Reaction:\\n "+name);
+		content.setFormula("Reaction:\\n "+name);
 	}
 
 	private void loadKeggSubstance(URL fileUrl) throws IOException {
@@ -903,7 +865,7 @@ public class TreeNode {
 				addChild(new TreeNode(formatFormula(Tools.removeHtml(lines[++i]))));
 			}
 			if (lines[i].contains("<nobr>Name</nobr>")) {
-				formula=new Formula("Substance:\\n "+Tools.removeHtml(lines[++i]).replaceAll(";$", ""));
+				content.setFormula("Substance:\\n "+Tools.removeHtml(lines[++i]).replaceAll(";$", ""));
 				TreeNode otherNames = null;
 				while (!lines[++i].contains("</div>")){
 					if (otherNames==null) addChild(otherNames=new TreeNode("other names"));
@@ -926,34 +888,34 @@ public class TreeNode {
 	}
 
 	private boolean readTreeFile(BufferedReader file) throws IOException {
-		while (file.ready() && this.formula == null) {
+		while (file.ready() && content.hasFormula()) {
 			String tag = Tools.readNextTag(file);
 			if (tag==null){
 				System.out.println("empty tag found!");
 				continue;
 			}
-			if (tag.equals("<icon BUILTIN=\"button_cancel\"/>")) this.parent.formula = new Formula("\\rgb{ff0000,\\nok }" + this.parent.formula.toString());
-			if (tag.equals("<icon BUILTIN=\"idea\"/>")) this.parent.formula = new Formula("\\info " + this.parent.formula.toString());
-			if (tag.equals("<icon BUILTIN=\"messagebox_warning\"/>") || tag.equals("<icon BUILTIN=\"clanbomber\"/>")) this.parent.formula = new Formula("\\bomb " + this.parent.formula.toString());
-			if (tag.equals("<icon BUILTIN=\"forward\"/>")) this.parent.formula = new Formula("\\rgb{0099ff,\\=> }" + this.parent.formula.toString());
-			if (tag.equals("<icon BUILTIN=\"button_ok\"/>")) this.parent.formula = new Formula("\\rgb{00aa00,\\ok }" + this.parent.formula.toString());
-			if (tag.equals("<icon BUILTIN=\"pencil\"/>")) this.parent.formula = new Formula("\\rgb{bb0000,\\pen }" + this.parent.formula.toString());
-			if (tag.equals("<icon BUILTIN=\"back\"/>")) this.parent.formula = new Formula("\\rgb{0099ff,\\<= }" + this.parent.formula.toString());
-			if (tag.equals("<icon BUILTIN=\"help\"/>")) this.parent.formula = new Formula("\\rgb{000099,\\bold{(?)}} " + this.parent.formula.toString());
-			if (tag.equals("<icon BUILTIN=\"ksmiletris\"/>")) this.parent.formula = new Formula("\\rgb{008888,\\smile }" + this.parent.formula.toString());
-			if (tag.equals("<icon BUILTIN=\"stop\"/>")) this.parent.formula = new Formula("\\rgb{ff0000,\\nokbox }" + this.parent.formula.toString());
+			if (tag.equals("<icon BUILTIN=\"button_cancel\"/>")) this.parent.content.setFormula("\\rgb{ff0000,\\nok }" + this.parent.content.getFormulaCode());
+			if (tag.equals("<icon BUILTIN=\"idea\"/>")) this.parent.content.setFormula("\\info " + this.parent.content.getFormulaCode());
+			if (tag.equals("<icon BUILTIN=\"messagebox_warning\"/>") || tag.equals("<icon BUILTIN=\"clanbomber\"/>")) this.parent.content.setFormula("\\bomb " + this.parent.content.getFormulaCode());
+			if (tag.equals("<icon BUILTIN=\"forward\"/>")) this.parent.content.setFormula("\\rgb{0099ff,\\=> }" + this.parent.content.getFormulaCode());
+			if (tag.equals("<icon BUILTIN=\"button_ok\"/>")) this.parent.content.setFormula("\\rgb{00aa00,\\ok }" + this.parent.content.getFormulaCode());
+			if (tag.equals("<icon BUILTIN=\"pencil\"/>")) this.parent.content.setFormula("\\rgb{bb0000,\\pen }" + this.parent.content.getFormulaCode());
+			if (tag.equals("<icon BUILTIN=\"back\"/>")) this.parent.content.setFormula("\\rgb{0099ff,\\<= }" + this.parent.content.getFormulaCode());
+			if (tag.equals("<icon BUILTIN=\"help\"/>")) this.parent.content.setFormula("\\rgb{000099,\\bold{(?)}} " + this.parent.content.getFormulaCode());
+			if (tag.equals("<icon BUILTIN=\"ksmiletris\"/>")) this.parent.content.setFormula("\\rgb{008888,\\smile }" + this.parent.content.getFormulaCode());
+			if (tag.equals("<icon BUILTIN=\"stop\"/>")) this.parent.content.setFormula("\\rgb{ff0000,\\nokbox }" + this.parent.content.getFormulaCode());
 
 			if (tag.startsWith("<node")) {
 				String txt = Tools.htmlToUnicode(Tools.getTagProperty(tag, "TEXT"));
 
 				String colString = Tools.getTagProperty(tag, "COLOR");
-				if (colString != null) this.foregroundColor = getColorFromCode(colString);
+				if (colString != null) content.setForegroundColor(getColorFromCode(colString));
 
 				String colString2 = Tools.getTagProperty(tag, "BACKGROUND_COLOR");
-				if (colString2 != null) this.backgroundColor = getColorFromCode(colString2);
+				if (colString2 != null) content.setBackgroundColor(getColorFromCode(colString2));
 
 				if (txt.contains("<img src=")) txt = extractImageFromTag(txt);
-				this.formula = new Formula(txt);
+				content.setFormula(txt);
 				if (tag.endsWith("/>")) return true;
 			}
 			if (tag.equals("</node>")) return false;
@@ -998,16 +960,16 @@ public class TreeNode {
 	private void saveNode(OutputStreamWriter file, URL filename) throws IOException {
 		// System.out.println("TreeNode.saveNode("+filename+" , "+node.getText()+");");
 		file.write("text=" + this.getFormulaCode() + "\r\n");
-		if (nodeImage != null) {
-			Tools.getRelativePath(filename, nodeImage.getUrl());
-			file.write("image=" + Tools.getRelativePath(filename, nodeImage.getUrl()) + "\r\n");
+		if (content.hasNodeImage()) {
+			Tools.getRelativePath(filename, content.getNodeImage().getUrl());
+			file.write("image=" + Tools.getRelativePath(filename, content.getNodeImage().getUrl()) + "\r\n");
 		}
-		if (link != null) file.write("content=Link:" + Tools.getRelativePath(filename, link) + "\r\n");
+		if (content.hasLink()) file.write("content=Link:" + Tools.getRelativePath(filename, content.getLink()) + "\r\n");
 		if (nodeFile != null && !nodeFile.equals(filename)) {
 			file.write("content=" + Tools.getRelativePath(filename, nodeFile) + "\r\n");
 		}
-		if (!foregroundColor.equals(Color.BLACK)) file.write("Color1=" + Tools.colorToString(foregroundColor) + "\r\n");
-		if (!backgroundColor.equals(Color.WHITE)) file.write("Color2=" + Tools.colorToString(backgroundColor) + "\r\n");
+		if (!content.getForegroundColor().equals(Color.BLACK)) file.write("Color1=" + Tools.colorToString(content.getForegroundColor()) + "\r\n");
+		if (!content.getBackgroundColor().equals(Color.WHITE)) file.write("Color2=" + Tools.colorToString(content.getBackgroundColor()) + "\r\n");
 	}
 
 	private void saveTree(OutputStreamWriter outFile, URL filename) throws IOException {
@@ -1027,7 +989,7 @@ public class TreeNode {
 	private String toString(int l) {
 		if (l > 10) return "...";
 		String result = "{";
-		if (formula != null) result += formula;
+		if (content.hasFormula()) result += content.getFormula();
 		TreeNode dummy = firstChild();
 		while (dummy != null) {
 			result += dummy.toString(l + 1);
