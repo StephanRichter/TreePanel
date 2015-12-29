@@ -855,6 +855,7 @@ public class TreeNode {
 		if (name==null) name="unnamed reaction";
 		name=name.replace("<=>", "\\<=> ");
 		content.setFormula("Reaction:\\n "+name);
+		nodeFileHasBeenLoaded=true;
 	}
 
 	private void loadKeggSubstance(URL fileUrl) throws IOException {
@@ -885,6 +886,7 @@ public class TreeNode {
 				}
 			}
 		}
+		nodeFileHasBeenLoaded=true;
 	}
 
 	private boolean readTreeFile(BufferedReader file) throws IOException {
