@@ -9,8 +9,8 @@ import java.awt.Stroke;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.TreeSet;
 import java.util.zip.DataFormatException;
 
 import de.srsoftware.formula.FormulaFont;
@@ -162,7 +162,7 @@ public class RootTreePanel extends TreePanel {
 
 	private void paintFamily(Graphics2D g, TreeNode mindmap,Point leftCenter, Dimension mindmapDimension,FormulaFont font) {
 		TreeNode parent=mindmap.parent();
-		TreeSet<Point> points=new TreeSet<Point>();
+		HashSet<Point> points=new HashSet<Point>();
 		if (parent!=null){
 			int x=leftCenter.x;
 			int y=leftCenter.y;

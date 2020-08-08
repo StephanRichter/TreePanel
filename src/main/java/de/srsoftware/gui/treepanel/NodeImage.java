@@ -59,14 +59,18 @@ public class NodeImage {
 				imageUrl = url;
 			}
 			if (!(new File(imageUrl.getFile())).exists()) System.out.println(t("Could not find image #!",imageUrl)); 
-		} else {
+		} else { // local file
 			imageUrl = url;
 			File testFile=new File(imageUrl.getFile());
 			if (!testFile.exists()){
 				String [] names = { testFile.getName() };
 				System.out.print("searching for "+names[0]);
-				URL searchedFile=FileTools.searchFiles(testFile.getParent(),names);
-				if (searchedFile!=null) imageUrl=searchedFile;
+				File searchedFile=FileTools.searchFiles(testFile.getParent(),names);
+				if (searchedFile!=null) try {
+					imageUrl=searchedFile.toURI().toURL();
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				}
 			}
 
 		}
