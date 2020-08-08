@@ -6,6 +6,8 @@
 	<artifactId>tools.gui.treepanel</artifactId>
 	<version>1.0.1</version>
 	<name>TreePanel</name>
+	<description>Panels for Mindmaps</description>
+	<url>https://github.com/StephanRichter/TreePanel</url>
 	<organization>
 		<name>SRSoftware</name>
 		<url>https://srsoftware.de</url>
@@ -26,6 +28,13 @@
 			<organizationUrl>http://www.srsoftware.de</organizationUrl>
 		</developer>
 	</developers>
+	
+		<scm>
+		<connection>scm:git:git://github.com/StephanRichter/TreePanel.git</connection>
+		<developerConnection>scm:git:git@github.com:StephanRichter/TreePanel.git</developerConnection>
+		<url>https://github.com/StephanRichter/TreePanel</url>
+		<tag>HEAD</tag>
+	</scm>
 
 	<build>
 		<plugins>
