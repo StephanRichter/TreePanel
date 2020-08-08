@@ -14,7 +14,7 @@ import de.keawe.tools.translations.Translation;
 import de.srsoftware.tools.files.FileTools;
 
 public class NodeImage {
-	private static String _(String key, Object insert) {
+	private static String t(String key, Object insert) {
 		return Translation.get(NodeImage.class,key, insert);
 	}
 	private URL imageUrl = null;
@@ -58,7 +58,7 @@ public class NodeImage {
 			} catch (MalformedURLException e1) {
 				imageUrl = url;
 			}
-			if (!(new File(imageUrl.getFile())).exists()) System.out.println(_("Could not find image #!",imageUrl)); 
+			if (!(new File(imageUrl.getFile())).exists()) System.out.println(t("Could not find image #!",imageUrl)); 
 		} else {
 			imageUrl = url;
 			File testFile=new File(imageUrl.getFile());

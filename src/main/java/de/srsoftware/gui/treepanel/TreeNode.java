@@ -74,7 +74,7 @@ public class TreeNode {
 			if (!dummy.canBeChanged) continue;
 			if (!dummy.save()) result.add(dummy);
 			if (nodeOpenAndChanged(dummy.nodeFile) != null) {
-				System.out.println(_("Warning! The File # has been concurrently edited at two or more places. Only changes of one instance will be saved to #!\nChanges of other instances will be saved to backup files in the same folder!", new Object[]{dummy.nodeFile,dummy.nodeFile}));
+				System.out.println(t("Warning! The File # has been concurrently edited at two or more places. Only changes of one instance will be saved to #!\nChanges of other instances will be saved to backup files in the same folder!", new Object[]{dummy.nodeFile,dummy.nodeFile}));
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
@@ -94,10 +94,10 @@ public class TreeNode {
 		g.setColor(swappedColor);
 		swappedColor = dummy;
 	}
-	private static String _(String text) { 
+	private static String t(String text) { 
 		return Translation.get(TreeNode.class,text);
 	}
-	private static String _(String key, Object insert) {
+	private static String t(String key, Object insert) {
 		return Translation.get(TreeNode.class,key, insert);
 	}
 	private static boolean isSymbolicLink(File file) throws IOException {
@@ -267,7 +267,7 @@ public class TreeNode {
 		URL rootUrl = getRoot().nodeFile;
 		String rootFile=(rootUrl==null)?null:rootUrl.toString();
 		
-		return _("Node in File:\n#\n\nText:\n#\n\nImage:\n#\n\nLink:\n#\n\nText color: #\nBackground color: #",new Object[]{ Tools.shorten(rootFile),Tools.shorten(getText()),content.getNodeImage(),content.getLink(),content.getForegroundColor(),content.getBackgroundColor()});
+		return t("Node in File:\n#\n\nText:\n#\n\nImage:\n#\n\nLink:\n#\n\nText color: #\nBackground color: #",new Object[]{ Tools.shorten(rootFile),Tools.shorten(getText()),content.getNodeImage(),content.getLink(),content.getForegroundColor(),content.getBackgroundColor()});
 
 	}
 
@@ -609,7 +609,7 @@ public class TreeNode {
 	}
 
 	public void waitForLoading() {
-		System.out.println(_("Waiting for #",this.getText()));
+		System.out.println(t("Waiting for #",this.getText()));
 		while (this.nodeFile!=null && !hasBeenLoadedFromFile()) {
 			try {
 				Thread.sleep(100);
@@ -617,19 +617,6 @@ public class TreeNode {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}
-	}
-
-	private void addSubstances(TreeNode substances, String list) {
-		String[] parts = list.split(" \\+ ");
-		for (int i=0; i<parts.length; i++){
-			TreeNode child = new TreeNode(parts[i]);
-			try{
-				child.nodeFile=new URL("http://www.genome.jp/dbget-bin/www_bget?"+parts[i].trim());
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
-			}
-			substances.addChild(child);
 		}
 	}
 
@@ -649,10 +636,6 @@ public class TreeNode {
 		URL imageUrl = Urls.getURLto(this.getRoot().nodeFile.toString(), file);
 		content.setNodeImage(imageUrl);
 		return txt;
-	}
-
-	private String formatFormula(String s) {
-		return s.replaceAll("(\\D)(\\d)", "$1\\\\_{$2").replaceAll("(\\d)(\\D)", "$1}$2").replaceAll("(\\d)$","$1}");
 	}
 
 	private boolean isFolder(URL fileUrl) {
@@ -719,8 +702,8 @@ public class TreeNode {
 			while (!fileReader.ready()) {
 				Thread.sleep(waitTime);
 				waitTime *= 2;
-				System.out.println(_("File is not available at the moment. Will try again in #ms...",waitTime));
-				if (waitTime > 16000) throw new IOException(_("# not ready to be read!",fileUrl));
+				System.out.println(t("File is not available at the moment. Will try again in #ms...",waitTime));
+				if (waitTime > 16000) throw new IOException(t("# not ready to be read!",fileUrl));
 			}
 			TreeNode root = this;
 			root.nodeFile = fileUrl;
@@ -742,8 +725,8 @@ public class TreeNode {
 			while (!fileReader.ready()) {
 				Thread.sleep(waitTime);
 				waitTime *= 2;
-				System.out.println(_("File is not available at the moment. Will try again in #ms...",waitTime));
-				if (waitTime > 16000) throw new IOException(_("# not ready to be read!",fileUrl));
+				System.out.println(t("File is not available at the moment. Will try again in #ms...",waitTime));
+				if (waitTime > 16000) throw new IOException(t("# not ready to be read!",fileUrl));
 			}
 			TreeNode root = this;
 			root.nodeFile = fileUrl;
@@ -763,7 +746,7 @@ public class TreeNode {
 				if (line.equals("[UP]")) {
 					if (node.parent()!=null){
 						node = node.parent();
-					} else System.out.println(_("Tree corrupt: UP-command found while at root node."));
+					} else System.out.println(t("Tree corrupt: UP-command found while at root node."));
 				}
 
 				if (line.startsWith("text=")) {
@@ -775,14 +758,14 @@ public class TreeNode {
 						try {
 							node.content.setLink(Urls.getURLto(this.getRoot().nodeFile.toString(), content.substring(5)));
 						} catch (MalformedURLException e) {
-							Tools.message(_("external link (#) could not be resolved!",content.substring(5)));
+							Tools.message(t("external link (#) could not be resolved!",content.substring(5)));
 						}
 					} else { // eingebundener Teilbaum
 						try {
 							URL nodeURL = Urls.getURLto(this.getRoot().nodeFile.toString(), content);
 							node.nodeFile = nodeURL;
 						} catch (MalformedURLException e) {
-							Tools.message(_("embedded tree (#) could not be resolved!",content));
+							Tools.message(t("embedded tree (#) could not be resolved!",content));
 						}
 
 					}
@@ -793,7 +776,7 @@ public class TreeNode {
 						URL imageUrl = Urls.getURLto(this.getRoot().nodeFile.toString(), content);
 						node.content.setNodeImage(imageUrl);
 					} catch (MalformedURLException e) {
-						Tools.message(_("was not able to resolve path to file (#)!",content));
+						Tools.message(t("was not able to resolve path to file (#)!",content));
 					}
 				}
 				if (line.startsWith("Color1=")) {

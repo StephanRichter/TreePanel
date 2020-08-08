@@ -89,11 +89,11 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	protected Color connectionColor;
 	protected static TreeNode cuttedNode = null;
 
-	public static String _(String text) {
+	public static String t(String text) {
 		return Translation.get(TreePanel.class,text);
 	}
 
-	public static String _(String key, Object insert) {
+	public static String t(String key, Object insert) {
 		return Translation.get(TreePanel.class,key, insert);
 	}
 
@@ -223,7 +223,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	public void editTree(TreeNode node) {
 		String oldText = node.getFormulaCode();
 		customizeNode(node);
-		String newText = FormulaInputDialog.readInput(null, _("Change text of current mindmap node"), node.getFormulaCode());
+		String newText = FormulaInputDialog.readInput(null, t("Change text of current mindmap node"), node.getFormulaCode());
 		if ((newText != null) && !newText.equals(oldText)) {
 			node.setText(newText);
 			updateView();
@@ -438,22 +438,22 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 
 	public void questForFileToSaveTree(TreeNode node) {
 		String guessedName = FileTools.deleteNonFilenameChars(node.getText() + ".imf");
-		String choosenFilename = Gui.saveDialog(this, _("save as"), guessedName, new GenericFileFilter(_("mindmap file"), "*.imf"));
+		String choosenFilename = Gui.saveDialog(this, t("save as"), guessedName, new GenericFileFilter(t("mindmap file"), "*.imf"));
 		if (choosenFilename == null) node.treeChanged();
 		else {
 			if (!choosenFilename.toUpperCase().endsWith(".IMF") && !choosenFilename.toUpperCase().endsWith(".MM")) {
 				choosenFilename += ".imf";
 			}
-			if (!(new File(choosenFilename)).exists() || JOptionPane.showConfirmDialog(null, _("The file you selected already exists. Overwrite it?"), _("Warning"), JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+			if (!(new File(choosenFilename)).exists() || JOptionPane.showConfirmDialog(null, t("The file you selected already exists. Overwrite it?"), t("Warning"), JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 				try {
 					URL u = new URL("file://" + choosenFilename);
 					System.out.println(u);
-					if (!node.saveTo(u)) JOptionPane.showMessageDialog(null, _("Sorry, I was not able to save the file as \"#\"!", choosenFilename), _("Error while trying to save"), JOptionPane.OK_OPTION);
+					if (!node.saveTo(u)) JOptionPane.showMessageDialog(null, t("Sorry, I was not able to save the file as \"#\"!", choosenFilename), t("Error while trying to save"), JOptionPane.OK_OPTION);
 					else {
 						sendActionEvent(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "SetTitle:" + node.getRoot().nodeFile()));
 					}
 				} catch (MalformedURLException e) {
-					System.out.println(_("Sorry, I was not able to build an URL from \"#\"!", choosenFilename));
+					System.out.println(t("Sorry, I was not able to build an URL from \"#\"!", choosenFilename));
 					node.treeChanged();
 				}
 			}
@@ -552,7 +552,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	}
 
 	public void showNodeDetails() {
-		JOptionPane.showMessageDialog(this, tree.getFullInfo(), _("Information"), JOptionPane.INFORMATION_MESSAGE);
+		JOptionPane.showMessageDialog(this, tree.getFullInfo(), t("Information"), JOptionPane.INFORMATION_MESSAGE);
 		this.requestFocus();
 	}
 	
@@ -603,9 +603,9 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 
 		ExportThread exportThread = new ExportThread(folder,onlyCurrent,maxDepth,interactive,singleFile,noMultipleFollow);
 		exportThread.start();
-	  infoDialog = new JDialog((Frame)null,_("exporting mindmaps"));
+	  infoDialog = new JDialog((Frame)null,t("exporting mindmaps"));
 	  VerticalPanel vp = new VerticalPanel();
-	  vp.add(label=new JLabel(_("Starting to export your selected mindmap in two seconds...                 ")));
+	  vp.add(label=new JLabel(t("Starting to export your selected mindmap in two seconds...                 ")));
 	  vp.skalieren();
 	  infoDialog.getContentPane().add(vp);
 	  infoDialog.pack();
@@ -687,7 +687,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 					} else {
 						boolean include = depth < maxDepth;
 						if (interactive) {
-							System.out.println(_("Warning: interactive export not supported, yet."));
+							System.out.println(t("Warning: interactive export not supported, yet."));
 							// include = Abfrage
 						}
 						if (include) {
