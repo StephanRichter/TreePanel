@@ -7,7 +7,7 @@ import java.net.URL;
 import de.srsoftware.formula.Formula;
 import de.srsoftware.formula.FormulaFont;
 
-public class NodeContent {
+public class NodeContent implements Comparable<NodeContent> {
 	private Formula formula;
 	private Color backgroundColor = null; // color for filling the nodes
 	private NodeImage nodeImage = null; // holds the node's image, if given
@@ -125,6 +125,11 @@ public class NodeContent {
 
 	public void setNodeImage(URL fileUrl) {
 		nodeImage = (fileUrl == null) ? null : new NodeImage(fileUrl);
+	}
+
+	@Override
+	public int compareTo(NodeContent other) {
+		return formula.compareTo(other.formula);
 	}
 
 }

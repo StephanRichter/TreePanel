@@ -31,7 +31,7 @@ import de.srsoftware.tools.files.FileTools;
 import de.srsoftware.tools.files.Filefilter;
 import de.srsoftware.tools.urls.Urls;
 
-public class TreeNode {
+public class TreeNode implements Comparable<TreeNode>{
 	
 	private TreeNode parent = null; // this variable holds the pointer to the parent node, if given
 	private TreeNode firstChild = null;// this variable holds the pointer to the current node's first child
@@ -916,5 +916,10 @@ public class TreeNode {
 		}
 		result += "}";
 		return result;
+	}
+	
+	@Override
+	public int compareTo(TreeNode other) {
+		return content.compareTo(other.content);
 	}
 }
