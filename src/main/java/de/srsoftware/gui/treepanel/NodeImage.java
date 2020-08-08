@@ -10,12 +10,12 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import de.srsoftware.tools.Tools;
-import de.srsoftware.tools.translations.Translations;
+import de.keawe.tools.translations.Translation;
+import de.srsoftware.tools.files.FileTools;
 
 public class NodeImage {
 	private static String _(String key, Object insert) {
-		return Translations.get(key, insert);
+		return Translation.get(NodeImage.class,key, insert);
 	}
 	private URL imageUrl = null;
 	
@@ -52,7 +52,7 @@ public class NodeImage {
 	}
 
 	public void load(URL url) {
-		if (!Tools.fileIsLocal(url)) {
+		if (!FileTools.isLocal(url)) {
 			try {
 				imageUrl=new URL(url.toString().replace(" ", "%20"));
 			} catch (MalformedURLException e1) {
@@ -65,7 +65,7 @@ public class NodeImage {
 			if (!testFile.exists()){
 				String [] names = { testFile.getName() };
 				System.out.print("searching for "+names[0]);
-				URL searchedFile=Tools.searchFiles(names, testFile.getParent());
+				URL searchedFile=FileTools.searchFiles(testFile.getParent(),names);
 				if (searchedFile!=null) imageUrl=searchedFile;
 			}
 

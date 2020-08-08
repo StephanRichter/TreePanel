@@ -21,14 +21,15 @@ import java.util.TreeSet;
 import java.util.Vector;
 import java.util.zip.DataFormatException;
 
+import de.keawe.tools.translations.Translation;
 import de.srsoftware.formula.Formula;
 import de.srsoftware.formula.FormulaFont;
-import de.srsoftware.tools.FileRecoder;
-import de.srsoftware.tools.Filefilter;
-import de.srsoftware.tools.ObjectComparator;
 import de.srsoftware.tools.Tools;
-import de.srsoftware.tools.translations.Translations;
-import de.srsoftware.xmlformatter.XmlFormatter;
+import de.srsoftware.tools.colors.Colors;
+import de.srsoftware.tools.files.FileRecoder;
+import de.srsoftware.tools.files.FileTools;
+import de.srsoftware.tools.files.Filefilter;
+import de.srsoftware.tools.urls.Urls;
 
 public class TreeNode {
 	
@@ -50,7 +51,7 @@ public class TreeNode {
 	private boolean canBeChanged = true;
 	
 	
-	private static TreeSet<TreeNode> changedNodes = new TreeSet<TreeNode>(new ObjectComparator());
+	private static TreeSet<TreeNode> changedNodes = new TreeSet<TreeNode>();
 	public static boolean existUnsavedNodes() {
 		return changedNodes.size() > 0;
 	}
@@ -67,7 +68,7 @@ public class TreeNode {
 	}
 	public static TreeSet<TreeNode> saveChangedNodes() {
 		// TODO Auto-generated method stub
-		TreeSet<TreeNode> result = new TreeSet<TreeNode>(new ObjectComparator());
+		TreeSet<TreeNode> result = new TreeSet<TreeNode>();
 		while (!changedNodes.isEmpty()) {
 			TreeNode dummy = pollFirst(changedNodes);
 			if (!dummy.canBeChanged) continue;
@@ -94,10 +95,10 @@ public class TreeNode {
 		swappedColor = dummy;
 	}
 	private static String _(String text) { 
-		return Translations.get(text);
+		return Translation.get(TreeNode.class,text);
 	}
 	private static String _(String key, Object insert) {
-		return Translations.get(key, insert);
+		return Translation.get(TreeNode.class,key, insert);
 	}
 	private static boolean isSymbolicLink(File file) throws IOException {
 	  if (file == null)
@@ -357,12 +358,12 @@ public class TreeNode {
 	public void loadFromFile(URL fileUrl) throws FileNotFoundException, IOException, DataFormatException, URISyntaxException {
 		if (!content.hasBeenLoaded()) {
 			content.setLoaded();
-			if (!Tools.fileIsLocal(fileUrl)) {
+			if (!FileTools.isLocal(fileUrl)) {
 				try {
 					fileUrl = new URL(fileUrl.toString().replace(" ", "%20"));
 				} catch (MalformedURLException e1) {}
 			}
-			if (!Tools.fileExists(fileUrl)) {
+			if (!FileTools.fileExists(fileUrl)) {
 				throw new FileNotFoundException(fileUrl.toString());
 			} else {
 				
@@ -376,20 +377,19 @@ public class TreeNode {
 					URL temp = getTemporaryUrl();
 					if (n.saveTo(temp)) {
 						n.nodeFile = fileUrl;
-						if (Tools.fileIsIntelliMindFile(fileUrl)) loadFromIntellimindFile(temp);
-						if (Tools.fileIsFreeMindFile(fileUrl)) loadFromFreemindFile(temp);
+						if (FileTools.isIntelliMindFile(fileUrl)) loadFromIntellimindFile(temp);
+						if (FileTools.isFreeMindFile(fileUrl)) loadFromFreemindFile(temp);
 						changedNodes.remove(n);
 						this.nodeFile = fileUrl;
 						this.treeChanged();
 					} else {
-						if (Tools.fileIsIntelliMindFile(fileUrl)) loadFromIntellimindFile(fileUrl);
-						if (Tools.fileIsFreeMindFile(fileUrl)) loadFromFreemindFile(fileUrl);
+						if (FileTools.isIntelliMindFile(fileUrl)) loadFromIntellimindFile(fileUrl);
+						if (FileTools.isFreeMindFile(fileUrl)) loadFromFreemindFile(fileUrl);
 					}
 				} else {
 					if (isFolder(fileUrl)) loadFolder(fileUrl); else
-					if (Tools.fileIsKeggUrl(fileUrl)) loadKeggFile(fileUrl); else
-					if (Tools.fileIsIntelliMindFile(fileUrl)) loadFromIntellimindFile(fileUrl); else
-					if (Tools.fileIsFreeMindFile(fileUrl)) loadFromFreemindFile(fileUrl); else
+					if (FileTools.isIntelliMindFile(fileUrl)) loadFromIntellimindFile(fileUrl); else
+					if (FileTools.isFreeMindFile(fileUrl)) loadFromFreemindFile(fileUrl); else
 						throw new DataFormatException(fileUrl.toString());
 				}
 			}
@@ -646,7 +646,7 @@ public class TreeNode {
 		int i = txt.indexOf("<img src=");
 		int j = txt.indexOf(">", i);
 		txt = txt.substring(0, i) + txt.substring(j + 1);
-		URL imageUrl = Tools.getURLto(this.getRoot().nodeFile.toString(), file);
+		URL imageUrl = Urls.getURLto(this.getRoot().nodeFile.toString(), file);
 		content.setNodeImage(imageUrl);
 		return txt;
 	}
@@ -678,8 +678,8 @@ public class TreeNode {
 		this.canBeChanged=false;
 		this.setBGColor(Color.yellow);
 		File [] subs=f.listFiles();
-		TreeMap<String,File> files=new TreeMap<String,File>(ObjectComparator.get());
-		TreeMap<String,File> directories=new TreeMap<String,File>(ObjectComparator.get());
+		TreeMap<String,File> files=new TreeMap<String,File>();
+		TreeMap<String,File> directories=new TreeMap<String,File>();
 		for (int i=0; i<subs.length; i++){
 			File file=subs[i];
 			String name=file.getName();
@@ -712,7 +712,7 @@ public class TreeNode {
 	private void loadFromFreemindFile(URL fileUrl) throws IOException {
 		// TODO Auto-generated method stub
 		// System.out.println("loading intelliMind file " + fileUrl);
-		fileUrl = Tools.fixUrl(fileUrl);
+		fileUrl = Urls.fix(fileUrl);
 		try {
 			BufferedReader fileReader = new BufferedReader(new InputStreamReader(fileUrl.openStream(), "UTF-8"));
 			int waitTime = 1;
@@ -733,7 +733,7 @@ public class TreeNode {
 	}
 
 	private void loadFromIntellimindFile(URL fileUrl) throws FileNotFoundException, IOException {
-		fileUrl = Tools.fixUrl(fileUrl);
+		fileUrl = Urls.fix(fileUrl);
 		FileRecoder.recode(fileUrl);
 		
 		try {
@@ -773,13 +773,13 @@ public class TreeNode {
 					String content = line.substring(8).replace("\\", "/");
 					if (content.startsWith("Link:")) {
 						try {
-							node.content.setLink(Tools.getURLto(this.getRoot().nodeFile.toString(), content.substring(5)));
+							node.content.setLink(Urls.getURLto(this.getRoot().nodeFile.toString(), content.substring(5)));
 						} catch (MalformedURLException e) {
 							Tools.message(_("external link (#) could not be resolved!",content.substring(5)));
 						}
 					} else { // eingebundener Teilbaum
 						try {
-							URL nodeURL = Tools.getURLto(this.getRoot().nodeFile.toString(), content);
+							URL nodeURL = Urls.getURLto(this.getRoot().nodeFile.toString(), content);
 							node.nodeFile = nodeURL;
 						} catch (MalformedURLException e) {
 							Tools.message(_("embedded tree (#) could not be resolved!",content));
@@ -790,7 +790,7 @@ public class TreeNode {
 				if (line.startsWith("image=")) {
 					String content = line.substring(6).replace("\\", "/");
 					try {
-						URL imageUrl = Tools.getURLto(this.getRoot().nodeFile.toString(), content);
+						URL imageUrl = Urls.getURLto(this.getRoot().nodeFile.toString(), content);
 						node.content.setNodeImage(imageUrl);
 					} catch (MalformedURLException e) {
 						Tools.message(_("was not able to resolve path to file (#)!",content));
@@ -803,7 +803,7 @@ public class TreeNode {
 						int b = Integer.decode("0x" + line.substring(10, 12)).intValue();
 						node.content.setForegroundColor(new Color(r, g, b));
 					} catch (Exception e) {
-						node.content.setForegroundColor(Tools.lookupColor(line.substring(7)));
+						node.content.setForegroundColor(Colors.lookup(line.substring(7)));
 					}
 				}
 				if (line.startsWith("Color2=")) {
@@ -813,7 +813,7 @@ public class TreeNode {
 						int b = Integer.decode("0x" + line.substring(10, 12)).intValue();
 						node.content.setBackgroundColor(new Color(r, g, b));
 					} catch (Exception e) {
-						node.content.setBackgroundColor(Tools.lookupColor(line.substring(7)));
+						node.content.setBackgroundColor(Colors.lookup(line.substring(7)));
 					}
 				}
 			}
@@ -821,72 +821,6 @@ public class TreeNode {
 		} catch (InterruptedException e) {
 			throw new IOException(e.getMessage());
 		}
-	}
-
-	private void loadKeggEquation(String equation) {
-		String[] sides=equation.split("<=>");
-		TreeNode substrates=new TreeNode("Substrates");
-		addSubstances(substrates,sides[0]);
-		addChild(substrates);
-		TreeNode products=new TreeNode("Products");
-		addSubstances(products,sides[1]);
-		addChild(products);
-	}
-
-	private void loadKeggFile(URL fileUrl) throws IOException {
-		System.out.println("loading "+fileUrl);
-		String url=fileUrl.toString();
-		if (url.startsWith("http://www.genome.jp/dbget-bin/www_bget?R") ||url.startsWith("http://www.genome.jp/dbget-bin/www_bget?rn:R")) loadKeggReaction(fileUrl);
-		if (url.startsWith("http://www.genome.jp/dbget-bin/www_bget?C") ||url.startsWith("http://www.genome.jp/dbget-bin/www_bget?cpd:C")) loadKeggSubstance(fileUrl);
-		TreeNode child=new TreeNode("\\=>  browse \\=> ");
-		child.content.setLink(fileUrl);
-		addChild(child);
-		nodeFile=fileUrl;
-	}
-
-	private void loadKeggReaction(URL fileUrl) throws IOException {
-		String[] lines=XmlFormatter.loadDocument(fileUrl).split("\n");
-		String name=null;
-		for (int i=0; i<lines.length; i++){			
-			if (lines[i].contains("<nobr>Name</nobr>")) name=Tools.removeHtml(lines[++i]).replaceAll(";$", "");
-			if (lines[i].contains("<nobr>Definition</nobr>") && name==null) name=Tools.removeHtml(lines[++i]);
-			if (lines[i].contains("<nobr>Equation</nobr>")) loadKeggEquation(Tools.removeHtml(lines[++i]));
-		}
-		if (name==null) name="unnamed reaction";
-		name=name.replace("<=>", "\\<=> ");
-		content.setFormula("Reaction:\\n "+name);
-		content.setLoaded();
-	}
-
-	private void loadKeggSubstance(URL fileUrl) throws IOException {
-		String[] lines=XmlFormatter.loadDocument(fileUrl).split("\n");
-		for (int i=0; i<lines.length; i++){
-			if (lines[i].contains("<nobr>Formula</nobr>")){
-				
-				addChild(new TreeNode(formatFormula(Tools.removeHtml(lines[++i]))));
-			}
-			if (lines[i].contains("<nobr>Name</nobr>")) {
-				content.setFormula("Substance:\\n "+Tools.removeHtml(lines[++i]).replaceAll(";$", ""));
-				TreeNode otherNames = null;
-				while (!lines[++i].contains("</div>")){
-					if (otherNames==null) addChild(otherNames=new TreeNode("other names"));
-					otherNames.addChild(new TreeNode(Tools.removeHtml(lines[i]).replaceAll(";$", "")));
-				}
-			}
-			if (lines[i].contains("<nobr>Reaction</nobr>")) {
-				TreeNode reactions=null;
-				while (!lines[++i].contains("</div>")){
-					if (reactions==null) addChild(reactions=new TreeNode("Reactions"));
-					String[] ids=Tools.removeHtml(lines[i]).split(" ");
-					for (int k=0; k<ids.length; k++){
-						TreeNode reaction = new TreeNode(ids[k].trim());
-						reaction.nodeFile=new URL("http://www.genome.jp/dbget-bin/www_bget?"+ids[k].trim());
-						reactions.addChild(reaction);
-					}
-				}
-			}
-		}
-		content.setLoaded();
 	}
 
 	private boolean readTreeFile(BufferedReader file) throws IOException {
@@ -936,7 +870,7 @@ public class TreeNode {
 			System.out.println("saving "+nodeFile);
 			try {
 				String filename = nodeFile.getFile();
-				if (Tools.fileIsLocal(nodeFile) && Tools.fileExists(nodeFile) && !filename.contains(".tmp.")) {
+				if (FileTools.isLocal(nodeFile) && FileTools.fileExists(nodeFile) && !filename.contains(".tmp.")) {
 					backup(filename);
 				}
 				OutputStreamWriter outFile = new OutputStreamWriter(new FileOutputStream(filename), "UTF-8");
@@ -963,15 +897,15 @@ public class TreeNode {
 		// System.out.println("TreeNode.saveNode("+filename+" , "+node.getText()+");");
 		file.write("text=" + this.getFormulaCode() + "\r\n");
 		if (content.hasNodeImage()) {
-			Tools.getRelativePath(filename, content.getNodeImage().getUrl());
-			file.write("image=" + Tools.getRelativePath(filename, content.getNodeImage().getUrl()) + "\r\n");
+			Urls.getRelativePath(filename, content.getNodeImage().getUrl());
+			file.write("image=" + Urls.getRelativePath(filename, content.getNodeImage().getUrl()) + "\r\n");
 		}
-		if (content.hasLink()) file.write("content=Link:" + Tools.getRelativePath(filename, content.getLink()) + "\r\n");
+		if (content.hasLink()) file.write("content=Link:" + Urls.getRelativePath(filename, content.getLink()) + "\r\n");
 		if (nodeFile != null && !nodeFile.equals(filename)) {
-			file.write("content=" + Tools.getRelativePath(filename, nodeFile) + "\r\n");
+			file.write("content=" + Urls.getRelativePath(filename, nodeFile) + "\r\n");
 		}
-		if (!content.getForegroundColor().equals(Color.BLACK)) file.write("Color1=" + Tools.colorToString(content.getForegroundColor()) + "\r\n");
-		if (!content.getBackgroundColor().equals(Color.WHITE)) file.write("Color2=" + Tools.colorToString(content.getBackgroundColor()) + "\r\n");
+		if (!content.getForegroundColor().equals(Color.BLACK)) file.write("Color1=" + Colors.toString(content.getForegroundColor()) + "\r\n");
+		if (!content.getBackgroundColor().equals(Color.WHITE)) file.write("Color2=" + Colors.toString(content.getBackgroundColor()) + "\r\n");
 	}
 
 	private void saveTree(OutputStreamWriter outFile, URL filename) throws IOException {

@@ -14,7 +14,6 @@ import java.util.TreeSet;
 import java.util.zip.DataFormatException;
 
 import de.srsoftware.formula.FormulaFont;
-import de.srsoftware.tools.ObjectComparator;
 
 public class RootTreePanel extends TreePanel {
 
@@ -163,7 +162,7 @@ public class RootTreePanel extends TreePanel {
 
 	private void paintFamily(Graphics2D g, TreeNode mindmap,Point leftCenter, Dimension mindmapDimension,FormulaFont font) {
 		TreeNode parent=mindmap.parent();
-		TreeSet<Point> points=new TreeSet<Point>(ObjectComparator.get());
+		TreeSet<Point> points=new TreeSet<Point>();
 		if (parent!=null){
 			int x=leftCenter.x;
 			int y=leftCenter.y;

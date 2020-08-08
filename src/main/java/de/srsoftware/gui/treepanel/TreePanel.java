@@ -36,11 +36,13 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import de.keawe.tools.translations.Translation;
 import de.srsoftware.formula.FormulaInputDialog;
-import de.srsoftware.tools.GenericFileFilter;
 import de.srsoftware.tools.Tools;
-import de.srsoftware.tools.VerticalPanel;
-import de.srsoftware.tools.translations.Translations;
+import de.srsoftware.tools.colors.Colors;
+import de.srsoftware.tools.files.FileTools;
+import de.srsoftware.tools.files.GenericFileFilter;
+import de.srsoftware.tools.gui.Gui;
 
 /**
  * @author Stephan Richter
@@ -75,6 +77,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	private static final long serialVersionUID = -9127677905556355410L;
 	private static final int UP = 1;
 	private static final int DOWN = -1;
+	private static String root = System.getProperty("user.dir");
 	protected static Color backgroundTraceColor = null;
 	protected static Color foregroundTraceColor = null;
 	private Vector<ActionListener> actionListeners;
@@ -87,11 +90,11 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	protected static TreeNode cuttedNode = null;
 
 	public static String _(String text) {
-		return Translations.get(text);
+		return Translation.get(TreePanel.class,text);
 	}
 
 	public static String _(String key, Object insert) {
-		return Translations.get(key, insert);
+		return Translation.get(TreePanel.class,key, insert);
 	}
 
 	protected TreeThread organizerThread; // Thread, der in regelmäßigen Abständen das Layout aktualisiert
@@ -434,8 +437,8 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	}
 
 	public void questForFileToSaveTree(TreeNode node) {
-		String guessedName = Tools.deleteNonFilenameChars(node.getText() + ".imf");
-		String choosenFilename = Tools.saveDialog(this, _("save as"), guessedName, new GenericFileFilter(_("mindmap file"), "*.imf"));
+		String guessedName = FileTools.deleteNonFilenameChars(node.getText() + ".imf");
+		String choosenFilename = Gui.saveDialog(this, _("save as"), guessedName, new GenericFileFilter(_("mindmap file"), "*.imf"));
 		if (choosenFilename == null) node.treeChanged();
 		else {
 			if (!choosenFilename.toUpperCase().endsWith(".IMF") && !choosenFilename.toUpperCase().endsWith(".MM")) {
@@ -482,7 +485,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 
 	public void setBackground(Color bg) {
 		super.setBackground(bg);
-		connectionColor = Tools.colorComplement(bg);
+		connectionColor = Colors.component(bg);
 	}
 
 	public void setBackgroundImage(Image image) {
@@ -716,7 +719,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 		actionListeners = new Vector<ActionListener>();
 		this.setBackground(new Color(0, 155, 255));
 		addMouseWheelListener(this);
-		backgroundImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/de/srsoftware/intellimind/intelliMind.gif"));
+		backgroundImage = Toolkit.getDefaultToolkit().getImage(FileTools.searchFiles(root,"intelliMind.gif").toString());
 	}
 
 	private TreeNode pollFirst(TreeSet<TreeNode> ts) {
