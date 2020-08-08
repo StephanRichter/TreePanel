@@ -90,11 +90,11 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	protected static TreeNode cuttedNode = null;
 
 	public static String t(String text) {
-		return Translation.get(TreePanel.class,text);
+		return Translation.get(TreePanel.class, text);
 	}
 
 	public static String t(String key, Object insert) {
-		return Translation.get(TreePanel.class,key, insert);
+		return Translation.get(TreePanel.class, key, insert);
 	}
 
 	protected TreeThread organizerThread; // Thread, der in regelmäßigen Abständen das Layout aktualisiert
@@ -259,35 +259,35 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 
 	public void mousePressed(MouseEvent arg0) {
 		this.setCursor(new Cursor(Cursor.MOVE_CURSOR));
-		mouseOffset=getLocationOnScreen();
+		mouseOffset = getLocationOnScreen();
 		// Bestimmen des geklickten Knotens
 		dragNode = getNodeAt(arg0.getPoint());
 		organizerThread.go();
 	}
-	
-	public void dragAndDrop(TreeNode draggedNode,TreeNode targetNode){
-		if (targetNode.parent()==null){
+
+	public void dragAndDrop(TreeNode draggedNode, TreeNode targetNode) {
+		if (targetNode.parent() == null) {
 			System.err.println("Can not replace root!");
 			return;
 		}
 
 		// test, whether the target is an descendant of our dragged node
 		TreeNode testNode = targetNode;
-		while (testNode.parent()!=null){
-			testNode=testNode.parent();
-			if (testNode==draggedNode){
+		while (testNode.parent() != null) {
+			testNode = testNode.parent();
+			if (testNode == draggedNode) {
 				System.err.println("Can not drag a node to an child of itself!");
 				return;
 			}
 		}
-		
+
 		// test, whether target is in the same level as draggedNode, and previous to it
-		boolean flipForward=false;
-		testNode=draggedNode;
-		while (testNode.prev()!=null){
-			testNode=testNode.prev();
-			if (testNode==targetNode){
-				flipForward=true;
+		boolean flipForward = false;
+		testNode = draggedNode;
+		while (testNode.prev() != null) {
+			testNode = testNode.prev();
+			if (testNode == targetNode) {
+				flipForward = true;
 				break;
 			}
 		}
@@ -296,40 +296,40 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 			// Next: cut & paste without triggering UI update (compare with cut() method)
 			draggedNode.cutoff();
 			targetNode.addBrother(draggedNode);
-			
-			if (flipForward){
+
+			if (flipForward) {
 				targetNode.cutoff();
-				draggedNode.addBrother(targetNode);						
+				draggedNode.addBrother(targetNode);
 			}
 
 			// now we do the ui update!
-			if (targetNode.parent() != null){
+			if (targetNode.parent() != null) {
 				setTreeTo(targetNode.parent());
 			} else {
 				setTreeTo(targetNode);
 			}
 		}
 	}
-	
+
 	public void mouseReleased(MouseEvent arg0) {
-		this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));		
+		this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 
 		// bei Doppelklick: Aktion auslösen
 		if (arg0.getClickCount() > 1) {
 			if (tree.getLink() != null)
-			// Ausführen, falls Verknüpfung
-			Tools.execute(tree.getLink());
+				// Ausführen, falls Verknüpfung
+				Tools.execute(tree.getLink());
 			else
-			// Bearbeiten, falls normaler Knoten
-			editTree(tree);
+				// Bearbeiten, falls normaler Knoten
+				editTree(tree);
 		} else {
 			// Bestimmen des geklickten Knotens
 			TreeNode dropNode = getNodeAt(arg0.getPoint());
-			
-			if (dropNode!=dragNode){
-			 // drag and drop places are different => we are dragging a node
+
+			if (dropNode != dragNode) {
+				// drag and drop places are different => we are dragging a node
 				dragAndDrop(dragNode, dropNode);
-				dragNode=null;
+				dragNode = null;
 				return;
 			}
 
@@ -340,8 +340,8 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 				// zu Knoten wechseln oder Bild vergrößern
 				if (tree != null) {
 					if (tree == dragNode)
-					// wenn geklickter Knoten schon im Zentrum ist: Bild ggf. vergrößern
-					showNodeImage();
+						// wenn geklickter Knoten schon im Zentrum ist: Bild ggf. vergrößern
+						showNodeImage();
 					else {
 						// wenn geklickter Knoten in der Peripherie: zentrieren
 						setTreeTo(dragNode);
@@ -349,7 +349,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 				}
 			}
 		}
-		dragNode=null;
+		dragNode = null;
 	}
 
 	public void mouseWheelMoved(MouseWheelEvent arg0) {
@@ -363,7 +363,8 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	}
 
 	public void navigateDown() {
-		if (tree.next() != null) setTreeTo(tree.next());
+		if (tree.next() != null)
+			setTreeTo(tree.next());
 		else {
 			TreeNode dummy = tree.parent();
 			if (dummy != null) {
@@ -398,7 +399,8 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	}
 
 	public void navigateUp() {
-		if (tree.prev() != null) setTreeTo(tree.prev());
+		if (tree.prev() != null)
+			setTreeTo(tree.prev());
 		else {
 			TreeNode dummy = tree.parent();
 			if (dummy != null) {
@@ -413,16 +415,16 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 		super.paint(g);
 		if (tree == null && backgroundImage != null) g.drawImage(backgroundImage, (this.getWidth() - backgroundImage.getWidth(this)) / 2, (this.getHeight() - backgroundImage.getHeight(this)) / 2, this);
 	}
-	
-	public void postPaint(Graphics g){
-		if (dragNode!=null && mouseOffset !=null){
+
+	public void postPaint(Graphics g) {
+		if (dragNode != null && mouseOffset != null) {
 			Point mp = MouseInfo.getPointerInfo().getLocation();
-			mp.translate(-(25+mouseOffset.x), -(7+mouseOffset.y));
+			mp.translate(-(25 + mouseOffset.x), -(7 + mouseOffset.y));
 			g.setColor(dragNode.getForeColor());
 			g.drawRoundRect(mp.x, mp.y, 50, 15, 5, 5);
 			g.setColor(dragNode.getBGColor());
 			g.fillRoundRect(mp.x, mp.y, 50, 15, 5, 5);
-		}		
+		}
 	}
 
 	public void paste() {
@@ -439,7 +441,8 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 	public void questForFileToSaveTree(TreeNode node) {
 		String guessedName = FileTools.deleteNonFilenameChars(node.getText() + ".imf");
 		String choosenFilename = Gui.saveDialog(this, t("save as"), guessedName, new GenericFileFilter(t("mindmap file"), "*.imf"));
-		if (choosenFilename == null) node.treeChanged();
+		if (choosenFilename == null)
+			node.treeChanged();
 		else {
 			if (!choosenFilename.toUpperCase().endsWith(".IMF") && !choosenFilename.toUpperCase().endsWith(".MM")) {
 				choosenFilename += ".imf";
@@ -448,7 +451,8 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 				try {
 					URL u = new URL("file://" + choosenFilename);
 					System.out.println(u);
-					if (!node.saveTo(u)) JOptionPane.showMessageDialog(null, t("Sorry, I was not able to save the file as \"#\"!", choosenFilename), t("Error while trying to save"), JOptionPane.OK_OPTION);
+					if (!node.saveTo(u))
+						JOptionPane.showMessageDialog(null, t("Sorry, I was not able to save the file as \"#\"!", choosenFilename), t("Error while trying to save"), JOptionPane.OK_OPTION);
 					else {
 						sendActionEvent(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "SetTitle:" + node.getRoot().nodeFile()));
 					}
@@ -555,8 +559,8 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 		JOptionPane.showMessageDialog(this, tree.getFullInfo(), t("Information"), JOptionPane.INFORMATION_MESSAGE);
 		this.requestFocus();
 	}
-	
-	private class ExportThread extends Thread{
+
+	private class ExportThread extends Thread {
 
 		private String folder;
 		private boolean onlyCurrent;
@@ -566,12 +570,12 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 		private boolean noMultiFollow;
 
 		public ExportThread(String folder, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) {
-			this.folder=folder;
-			this.onlyCurrent=onlyCurrent;
-			this.maxDepth=maxDepth;
-			this.interactive=interactive;
-			this.singleFile=singleFile;
-			this.noMultiFollow=noMultipleFollow;
+			this.folder = folder;
+			this.onlyCurrent = onlyCurrent;
+			this.maxDepth = maxDepth;
+			this.interactive = interactive;
+			this.singleFile = singleFile;
+			this.noMultiFollow = noMultipleFollow;
 		}
 
 		@Override
@@ -579,41 +583,31 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 			TreeNode root = tree.getSuperRoot();
 			try {
 				sleep(2000);
-	      writeHtmlFile(root, folder, 1, onlyCurrent, maxDepth, interactive, singleFile, noMultiFollow);
+				writeHtmlFile(root, folder, 1, onlyCurrent, maxDepth, interactive, singleFile, noMultiFollow);
 				infoDialog.setVisible(false);
 				setTree(root.reload());
-      } catch (IOException e) {
-	      e.printStackTrace();
-      } catch (DataFormatException e) {
-	      // TODO Auto-generated catch block
-	      e.printStackTrace();
-      } catch (URISyntaxException e) {
-	      // TODO Auto-generated catch block
-	      e.printStackTrace();
-      } catch (InterruptedException e) {
-	      // TODO Auto-generated catch block
-	      e.printStackTrace();
-      }
+			} catch (IOException|DataFormatException|URISyntaxException|InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
-
 
 	public void startHtmlExport(String folder, boolean onlyCurrent, int maxDepth, boolean interactive, boolean singleFile, boolean noMultipleFollow) throws IOException, DataFormatException, URISyntaxException {
 		exportedFiles = new TreeSet<String>();
 
-		ExportThread exportThread = new ExportThread(folder,onlyCurrent,maxDepth,interactive,singleFile,noMultipleFollow);
+		ExportThread exportThread = new ExportThread(folder, onlyCurrent, maxDepth, interactive, singleFile, noMultipleFollow);
 		exportThread.start();
-	  infoDialog = new JDialog((Frame)null,t("exporting mindmaps"));
-	  VerticalPanel vp = new VerticalPanel();
-	  vp.add(label=new JLabel(t("Starting to export your selected mindmap in two seconds...                 ")));
-	  vp.skalieren();
-	  infoDialog.getContentPane().add(vp);
-	  infoDialog.pack();
-	  infoDialog.setModal(false);
-	  infoDialog.setVisible(true);	
-	  
+		infoDialog = new JDialog((Frame) null, t("exporting mindmaps"));
+		VerticalPanel vp = new VerticalPanel();
+		vp.add(label = new JLabel(t("Starting to export your selected mindmap in two seconds...                 ")));
+		vp.skalieren();
+		infoDialog.getContentPane().add(vp);
+		infoDialog.pack();
+		infoDialog.setModal(false);
+		infoDialog.setVisible(true);
+
 	}
-	
+
 	public void stopOrganizing() {
 		organizerThread.die();
 	}
@@ -657,7 +651,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 			htmlFile.write("</body>\n");
 			closeHtmlFile(htmlFile);
 		}
-		if (label!=null && filename!=null){
+		if (label != null && filename != null) {
 			label.setText(filename);
 		}
 		return path;
@@ -719,7 +713,7 @@ public abstract class TreePanel extends JPanel implements MouseListener, MouseWh
 		actionListeners = new Vector<ActionListener>();
 		this.setBackground(new Color(0, 155, 255));
 		addMouseWheelListener(this);
-		backgroundImage = Toolkit.getDefaultToolkit().getImage(FileTools.searchFiles(root,"intelliMind.gif").toString());
+		backgroundImage = Toolkit.getDefaultToolkit().getImage(FileTools.searchFiles(root, "intelliMind.gif").toString());
 	}
 
 	private TreeNode pollFirst(TreeSet<TreeNode> ts) {

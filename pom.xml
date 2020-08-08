@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.srsoftware</groupId>
 	<artifactId>tools.gui.treepanel</artifactId>
-	<version>1.0.2</version>
+	<version>1.0.3</version>
 	<name>TreePanel</name>
 	<description>Panels for Mindmaps</description>
 	<url>https://github.com/StephanRichter/TreePanel</url>
